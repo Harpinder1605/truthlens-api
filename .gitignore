@@ -1,0 +1,17 @@
+# Ignore the clickbait data file
+
+clickbait_data.csv
+
+# Ignore virtual environment directories
+
+venv/
+env/
+
+# Ignore Python cache files
+
+pycache/
+*.pyc
+
+# Ignore Jupyter Notebook checkpoints
+
+.DS_Store
