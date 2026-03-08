@@ -46,17 +46,36 @@ def analyze_article():
     
     # FIX: Force native Python int then bool to prevent JSON serialization errors
     is_clickbait_svm = bool(int(svm_prediction) == 1)
+    sim_score = float(similarity_score)
 
-    # --- 3. COMBINED VERDICT ---
-    # FIX: Force native Python bool and float to prevent JSON serialization errors
-    final_warning = bool(is_clickbait_svm or (float(similarity_score) < 0.15))
+    # --- 3. SMARTER COMBINED VERDICT ---
+    if is_clickbait_svm and sim_score >= 0.25:
+        # Scenario A: Headline sounds like clickbait, BUT the body actually backs it up! 
+        # (It's sensational, but it is telling the truth).
+        final_warning = False
+        verdict_msg = "Sensational, but verifiable."
+        
+    elif is_clickbait_svm and sim_score < 0.25:
+        # Scenario B: Sounds like clickbait AND the body doesn't back it up.
+        final_warning = True
+        verdict_msg = "High Risk: Clickbait!"
+        
+    elif not is_clickbait_svm and sim_score < 0.10:
+        # Scenario C: Normal headline, but the body is completely unrelated.
+        final_warning = True
+        verdict_msg = "High Risk: Misleading Content!"
+        
+    else:
+        # Scenario D: Normal headline, decent similarity.
+        final_warning = False
+        verdict_msg = "Seems Reliable."
 
     response = {
         "headline": headline,
         "svm_flag": is_clickbait_svm,
-        "similarity_score": round(float(similarity_score), 2),
+        "similarity_score": round(sim_score, 2),
         "final_warning": final_warning,
-        "message": "High Risk Clickbait/Misleading!" if final_warning else "Seems Reliable."
+        "message": verdict_msg
     }
 
     return jsonify(response)
