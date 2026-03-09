@@ -5,198 +5,64 @@
   <title>TruthLens AI</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    /* CSS Variables for consistent, modern theming */
     :root {
-      --bg-color: #f8fafc;
-      --card-bg: #ffffff;
-      --primary: #4f46e5;
-      --primary-hover: #4338ca;
-      --text-main: #0f172a;
-      --text-sub: #64748b;
-      --border: #e2e8f0;
-      
-      /* Dynamic Colors */
-      --danger-light: #fef2f2;
-      --danger-dark: #991b1b;
-      --danger-accent: #ef4444;
-      --safe-light: #f0fdf4;
-      --safe-dark: #166534;
+      --bg-color: #f8fafc; --card-bg: #ffffff;
+      --primary: #4f46e5; --text-main: #0f172a; --text-sub: #64748b;
+      --border: #e2e8f0; --danger-light: #fef2f2; --danger-dark: #991b1b;
+      --danger-accent: #ef4444; --safe-light: #f0fdf4; --safe-dark: #166534;
       --safe-accent: #22c55e;
     }
 
-    body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      width: 340px; 
-      margin: 0;
-      padding: 20px;
-      background-color: var(--bg-color);
-      color: var(--text-main);
-    }
+    body { font-family: 'Inter', sans-serif; width: 340px; margin: 0; padding: 20px; background: var(--bg-color); color: var(--text-main); }
+    .header { display: flex; align-items: center; margin-bottom: 4px; }
+    .header svg { width: 24px; height: 24px; color: var(--primary); margin-right: 8px; }
+    h2 { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
+    h2 span { color: var(--primary); }
+    .subtitle { font-size: 13px; color: var(--text-sub); margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
 
-    /* Header Styles */
-    .header {
-      display: flex;
-      align-items: center;
-      margin-bottom: 4px;
-    }
-    .header svg {
-      width: 24px;
-      height: 24px;
-      color: var(--primary);
-      margin-right: 8px;
-    }
-    h2 {
-      margin: 0;
-      font-size: 20px;
-      font-weight: 700;
-      color: var(--text-main);
-      letter-spacing: -0.5px;
-    }
-    h2 span {
-      color: var(--primary);
-    }
-    .subtitle {
-      font-size: 13px;
-      color: var(--text-sub);
-      margin-top: 2px;
-      margin-bottom: 20px;
-      padding-bottom: 16px;
-      border-bottom: 1px solid var(--border);
-    }
+    button { width: 100%; padding: 12px; background: linear-gradient(135deg, var(--primary) 0%, #3b82f6 100%); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2); transition: all 0.2s; }
+    button:hover { transform: translateY(-1px); }
+    button:disabled { background: #cbd5e1; box-shadow: none; cursor: not-allowed; }
+    button svg { margin-right: 8px; width: 18px; height: 18px; }
 
-    /* Button Styles */
-    button {
-      width: 100%;
-      padding: 12px;
-      background: linear-gradient(135deg, var(--primary) 0%, #3b82f6 100%);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);
-      transition: all 0.2s ease;
-    }
-    button:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 6px 8px -1px rgba(79, 70, 229, 0.3);
-    }
-    button:disabled {
-      background: #cbd5e1;
-      box-shadow: none;
-      cursor: not-allowed;
-      transform: none;
-    }
-    button svg {
-      margin-right: 8px;
-      width: 18px;
-      height: 18px;
-    }
-
-    /* Loading Spinner */
-    #loading {
-      display: none;
-      text-align: center;
-      margin-top: 20px;
-    }
-    .spinner {
-      border: 3px solid rgba(0,0,0,0.05);
-      border-top: 3px solid var(--primary);
-      border-radius: 50%;
-      width: 24px;
-      height: 24px;
-      animation: spin 1s linear infinite;
-      margin: 0 auto 10px auto;
-    }
+    #loading { display: none; text-align: center; margin-top: 20px; }
+    .spinner { border: 3px solid rgba(0,0,0,0.05); border-top: 3px solid var(--primary); border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; margin: 0 auto 10px auto; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    .loading-text {
-      font-size: 13px;
-      color: var(--text-sub);
-      font-weight: 500;
-    }
+    .loading-text { font-size: 13px; color: var(--text-sub); font-weight: 500; }
 
-    /* Result Card Box */
-    #resultBox {
-      display: none;
-      margin-top: 20px;
-      background: var(--card-bg);
-      border-radius: 12px;
-      padding: 16px;
-      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
-      border: 1px solid var(--border);
-      border-left: 4px solid var(--text-sub); /* Default border */
-      transition: all 0.3s ease;
-    }
+    #resultBox { display: none; margin-top: 20px; background: var(--card-bg); border-radius: 12px; padding: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid var(--border); border-left: 4px solid var(--text-sub); }
     
-    /* Individual Metrics */
-    .metric-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-      font-size: 13px;
-      color: var(--text-sub);
-    }
-    .metric-label {
-      font-weight: 500;
-    }
-    .metric-value {
-      font-weight: 700;
-      color: var(--text-main);
-      background: var(--bg-color);
-      padding: 4px 10px;
-      border-radius: 6px;
-      border: 1px solid var(--border);
-    }
+    .metric-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 13px; color: var(--text-sub); }
+    .metric-label { font-weight: 500; }
+    .metric-value { font-weight: 700; color: var(--text-main); background: var(--bg-color); padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border); }
+    
+    /* Risk Percentage specific styling */
+    #riskScore { font-size: 15px; }
 
-    /* Final Verdict Area */
-    .verdict-container {
-      margin-top: 16px;
-      padding-top: 16px;
-      border-top: 1px solid var(--border);
-    }
-    .verdict {
-      font-size: 15px;
-      font-weight: 700;
-      text-align: center;
-      padding: 10px;
-      border-radius: 8px;
-      letter-spacing: 0.3px;
-    }
+    /* Trigger Words Styling */
+    #triggerContainer { margin-top: 12px; margin-bottom: 12px; display: none; }
+    .trigger-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+    .trigger-tag { background: #fee2e2; color: #991b1b; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; border: 1px solid #fca5a5; letter-spacing: 0.5px; }
 
-    /* Dynamic Classes */
+    .verdict-container { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+    .verdict { font-size: 15px; font-weight: 700; text-align: center; padding: 10px; border-radius: 8px; }
+
     .danger-border { border-left-color: var(--danger-accent) !important; }
     .safe-border { border-left-color: var(--safe-accent) !important; }
-    
-    .danger-bg { 
-      background-color: var(--danger-light); 
-      color: var(--danger-dark); 
-      border: 1px solid #fecaca; 
-    }
-    .safe-bg { 
-      background-color: var(--safe-light); 
-      color: var(--safe-dark); 
-      border: 1px solid #bbf7d0; 
-    }
+    .danger-bg { background-color: var(--danger-light); color: var(--danger-dark); border: 1px solid #fecaca; }
+    .safe-bg { background-color: var(--safe-light); color: var(--safe-dark); border: 1px solid #bbf7d0; }
   </style>
 </head>
 <body>
 
-  <!-- Header -->
   <div class="header">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
-      <circle cx="12" cy="12" r="3"></circle>
+      <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle>
     </svg>
     <h2>TruthLens <span>AI</span></h2>
   </div>
   <div class="subtitle">Real-time clickbait & integrity analysis</div>
   
-  <!-- Button -->
   <button id="analyzeBtn">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
@@ -204,22 +70,33 @@
     Analyze Current Page
   </button>
   
-  <!-- Loading Spinner -->
   <div id="loading">
     <div class="spinner"></div>
     <div class="loading-text">Mining data & running ML models...</div>
   </div>
 
-  <!-- Result Card -->
   <div id="resultBox">
+    <!-- NEW FEATURE: Risk Percentage -->
     <div class="metric-row">
-      <span class="metric-label">Cosine Similarity</span>
-      <span id="simScore" class="metric-value">--</span>
+      <span class="metric-label">Deception Probability</span>
+      <span id="riskScore" class="metric-value">--%</span>
     </div>
     
     <div class="metric-row">
-      <span class="metric-label">SVM Keyword Flag</span>
-      <span id="svmFlag" class="metric-value">--</span>
+      <span class="metric-label">Context Similarity</span>
+      <span id="simScore" class="metric-value">--</span>
+    </div>
+    
+    <!-- NEW FEATURE: Read Time -->
+    <div class="metric-row">
+      <span class="metric-label">Estimated Length</span>
+      <span id="readTime" class="metric-value">--</span>
+    </div>
+
+    <!-- NEW FEATURE: Explainable AI (Trigger Words) -->
+    <div id="triggerContainer">
+      <div class="metric-label" style="font-size: 12px;">SVM Trigger Words:</div>
+      <div id="triggerWords" class="trigger-tags"></div>
     </div>
     
     <div class="verdict-container">
