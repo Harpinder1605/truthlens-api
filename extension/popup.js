@@ -1,5 +1,5 @@
 // --- CONFIGURATION ---
-// Change this to your cloud URL once deployed (e.g., 'https://your-app.onrender.com/api/analyze')
+// Cloud URL 
 const API_URL = 'https://truthlens-api-xnvw.onrender.com/api/analyze'; 
 
 document.getElementById('analyzeBtn').addEventListener('click', async () => {
@@ -7,7 +7,7 @@ document.getElementById('analyzeBtn').addEventListener('click', async () => {
     const loading = document.getElementById('loading');
     const resultBox = document.getElementById('resultBox');
     
-    // Update UI to show loading state
+    // Show loading state
     btn.disabled = true;
     loading.style.display = 'block';
     resultBox.style.display = 'none';
@@ -37,7 +37,7 @@ document.getElementById('analyzeBtn').addEventListener('click', async () => {
           body: JSON.stringify(pageData)
         });
   
-        // FIX: Check if the server returned an error (like 400 Bad Request)
+        // Check if the server returned an error (like 400 Bad Request)
         if (!response.ok) {
             if (response.status === 400) {
                 alert("Could not find enough readable text. (This might be a highly visual Buzzfeed listicle or a video page).");
@@ -101,7 +101,7 @@ document.getElementById('analyzeBtn').addEventListener('click', async () => {
         clone.querySelectorAll(selector).forEach(el => el.remove());
     });
     
-    // 4. Extract clean paragraph text (UPGRADED FOR BUZZFEED & LISTICLES)
+    // 4. Extract clean paragraph text (including list items and subheadings, which often contain key information in Buzzfeed articles)
     let paragraphs = Array.from(clone.querySelectorAll('p, li, h2, h3, h4, .subbuzz-text'))
         .map(el => el.innerText.trim())
         .filter(text => text.length > 20) // Lowered filter to catch list items

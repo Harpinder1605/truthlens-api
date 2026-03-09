@@ -44,11 +44,11 @@ def analyze_article():
     headline_vector = svm_vectorizer.transform([headline])
     svm_prediction = svm_model.predict(headline_vector)[0]
     
-    # FIX: Force native Python int then bool to prevent JSON serialization errors
+    # Force native Python int then bool to prevent JSON serialization errors
     is_clickbait_svm = bool(int(svm_prediction) == 1)
     sim_score = float(similarity_score)
 
-    # --- 3. SMARTER COMBINED VERDICT ---
+    # --- 3. SMART COMBINED VERDICT ---
     if is_clickbait_svm and sim_score >= 0.25:
         # Scenario A: Headline sounds like clickbait, BUT the body actually backs it up! 
         # (It's sensational, but it is telling the truth).

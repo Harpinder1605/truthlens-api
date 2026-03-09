@@ -46,7 +46,7 @@ predictions = model.predict(X_test)
 accuracy = accuracy_score(y_test, predictions)
 print(f"Accuracy: {accuracy * 100:.2f}%\n")
 
-# This report is GOLD for your project documentation/presentation
+# This classification report gives us a deeper look at how well the model is doing on both classes (clickbait vs non-clickbait)
 print("Detailed Classification Report:")
 print(classification_report(y_test, predictions, target_names=['Normal News', 'Clickbait']))
 

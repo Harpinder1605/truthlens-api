@@ -24,7 +24,7 @@ def check_consistency(headline, body_text):
     else:
         print("Verdict: SAFE. Headline matches content.\n")
 
-# --- Let's test it with dummy data ---
+# ---  Testing it with dummy data ---
 
 # Test 1: Reliable News
 good_headline = "NASA Launches New Rover to Mars"

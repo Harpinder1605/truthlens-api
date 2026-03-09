@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <title>TruthLens AI</title>
-  <!-- Import premium modern font -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     /* CSS Variables for consistent, modern theming */
@@ -27,7 +26,7 @@
 
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      width: 340px; /* Slightly wider for breathing room */
+      width: 340px; 
       margin: 0;
       padding: 20px;
       background-color: var(--bg-color);
@@ -169,7 +168,7 @@
       letter-spacing: 0.3px;
     }
 
-    /* Dynamic Classes (Triggered by your existing popup.js) */
+    /* Dynamic Classes */
     .danger-border { border-left-color: var(--danger-accent) !important; }
     .safe-border { border-left-color: var(--safe-accent) !important; }
     
@@ -187,7 +186,7 @@
 </head>
 <body>
 
-  <!-- Sleek Header -->
+  <!-- Header -->
   <div class="header">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
       <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
@@ -197,7 +196,7 @@
   </div>
   <div class="subtitle">Real-time clickbait & integrity analysis</div>
   
-  <!-- Modern Button -->
+  <!-- Button -->
   <button id="analyzeBtn">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
@@ -205,13 +204,13 @@
     Analyze Current Page
   </button>
   
-  <!-- Professional Loading Spinner -->
+  <!-- Loading Spinner -->
   <div id="loading">
     <div class="spinner"></div>
     <div class="loading-text">Mining data & running ML models...</div>
   </div>
 
-  <!-- Premium Result Card -->
+  <!-- Result Card -->
   <div id="resultBox">
     <div class="metric-row">
       <span class="metric-label">Cosine Similarity</span>
