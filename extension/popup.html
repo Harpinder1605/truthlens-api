@@ -11,6 +11,7 @@
       --border: #e2e8f0; --danger-light: #fef2f2; --danger-dark: #991b1b;
       --danger-accent: #ef4444; --safe-light: #f0fdf4; --safe-dark: #166534;
       --safe-accent: #22c55e;
+      --neutral-light: #f1f5f9; --neutral-dark: #475569; --neutral-accent: #94a3b8;
     }
 
     body { font-family: 'Inter', sans-serif; width: 340px; margin: 0; padding: 20px; background: var(--bg-color); color: var(--text-main); }
@@ -36,10 +37,8 @@
     .metric-label { font-weight: 500; }
     .metric-value { font-weight: 700; color: var(--text-main); background: var(--bg-color); padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border); }
     
-    /* Risk Percentage specific styling */
     #riskScore { font-size: 15px; }
 
-    /* Trigger Words Styling */
     #triggerContainer { margin-top: 12px; margin-bottom: 12px; display: none; }
     .trigger-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
     .trigger-tag { background: #fee2e2; color: #991b1b; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; border: 1px solid #fca5a5; letter-spacing: 0.5px; }
@@ -47,10 +46,14 @@
     .verdict-container { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
     .verdict { font-size: 15px; font-weight: 700; text-align: center; padding: 10px; border-radius: 8px; }
 
+    /* Theme Classes */
     .danger-border { border-left-color: var(--danger-accent) !important; }
     .safe-border { border-left-color: var(--safe-accent) !important; }
+    .neutral-border { border-left-color: var(--neutral-accent) !important; }
+    
     .danger-bg { background-color: var(--danger-light); color: var(--danger-dark); border: 1px solid #fecaca; }
     .safe-bg { background-color: var(--safe-light); color: var(--safe-dark); border: 1px solid #bbf7d0; }
+    .neutral-bg { background-color: var(--neutral-light); color: var(--neutral-dark); border: 1px solid #cbd5e1; }
   </style>
 </head>
 <body>
@@ -76,7 +79,6 @@
   </div>
 
   <div id="resultBox">
-    <!-- NEW FEATURE: Risk Percentage -->
     <div class="metric-row">
       <span class="metric-label">Deception Probability</span>
       <span id="riskScore" class="metric-value">--%</span>
@@ -87,13 +89,11 @@
       <span id="simScore" class="metric-value">--</span>
     </div>
     
-    <!-- NEW FEATURE: Read Time -->
     <div class="metric-row">
       <span class="metric-label">Estimated Length</span>
       <span id="readTime" class="metric-value">--</span>
     </div>
 
-    <!-- NEW FEATURE: Explainable AI (Trigger Words) -->
     <div id="triggerContainer">
       <div class="metric-label" style="font-size: 12px;">SVM Trigger Words:</div>
       <div id="triggerWords" class="trigger-tags"></div>

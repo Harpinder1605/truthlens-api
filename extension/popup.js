@@ -1,5 +1,4 @@
 // --- CONFIGURATION ---
-// your Render URL (or localhost if testing locally)
 const API_URL = 'https://truthlens-api-xnvw.onrender.com/api/analyze'; 
 
 document.getElementById('analyzeBtn').addEventListener('click', async () => {
@@ -33,25 +32,24 @@ document.getElementById('analyzeBtn').addEventListener('click', async () => {
         });
   
         if (!response.ok) {
-            alert("The AI Server could not process this page.");
+            const errData = await response.json();
+            alert(errData.error || "The AI Server could not process this page.");
             btn.disabled = false; loading.style.display = 'none'; return;
         }
 
         const aiResult = await response.json();
   
-        // 4. Update the Extension UI with the new metrics
-        document.getElementById('simScore').innerText = aiResult.similarity_score;
+        // UI Updates
+        document.getElementById('simScore').innerText = aiResult.is_media ? "N/A" : aiResult.similarity_score;
+        document.getElementById('riskScore').innerText = aiResult.is_media ? "N/A" : (aiResult.risk_percentage + "%");
+        document.getElementById('readTime').innerText = aiResult.is_media ? "Video/Media" : (aiResult.read_time + " min (" + aiResult.word_count + " words)");
         
-        // Probability Score & Read Time
-        document.getElementById('riskScore').innerText = aiResult.risk_percentage + "%";
-        document.getElementById('readTime').innerText = aiResult.read_time + " min (" + aiResult.word_count + " words)";
-        
-        // Trigger Words Tags
+        // Trigger Words
         const triggerContainer = document.getElementById('triggerContainer');
         const triggerWordsBox = document.getElementById('triggerWords');
         
-        if (aiResult.trigger_words && aiResult.trigger_words.length > 0) {
-            triggerWordsBox.innerHTML = ''; // Clear old words
+        if (!aiResult.is_media && aiResult.trigger_words && aiResult.trigger_words.length > 0) {
+            triggerWordsBox.innerHTML = ''; 
             aiResult.trigger_words.forEach(word => {
                 const span = document.createElement('span');
                 span.className = 'trigger-tag';
@@ -67,11 +65,16 @@ document.getElementById('analyzeBtn').addEventListener('click', async () => {
         const verdictEl = document.getElementById('verdictText');
         verdictEl.innerText = aiResult.message;
         
-        resultBox.className = aiResult.final_warning ? 'danger-border' : 'safe-border';
-        verdictEl.className = 'verdict ' + (aiResult.final_warning ? 'danger-bg' : 'safe-bg');
-        
-        // If probability is extremely high, turn the percentage text red
-        document.getElementById('riskScore').style.color = aiResult.risk_percentage > 60 ? 'var(--danger-dark)' : 'var(--text-main)';
+        // Handle the new Media (Neutral) state
+        if (aiResult.is_media) {
+            resultBox.className = 'neutral-border';
+            verdictEl.className = 'verdict neutral-bg';
+            document.getElementById('riskScore').style.color = 'var(--text-main)';
+        } else {
+            resultBox.className = aiResult.final_warning ? 'danger-border' : 'safe-border';
+            verdictEl.className = 'verdict ' + (aiResult.final_warning ? 'danger-bg' : 'safe-bg');
+            document.getElementById('riskScore').style.color = aiResult.risk_percentage > 60 ? 'var(--danger-dark)' : 'var(--text-main)';
+        }
   
         loading.style.display = 'none';
         resultBox.style.display = 'block';
@@ -94,6 +97,9 @@ document.getElementById('analyzeBtn').addEventListener('click', async () => {
     if (h1) headline = h1.innerText;
     else if (ogTitle) headline = ogTitle.content;
     else headline = document.title;
+
+    // 1. Detect if the page is media-heavy (Videos, YouTube iframes)
+    const hasMedia = document.querySelectorAll('video, iframe[src*="youtube"], iframe[src*="vimeo"]').length > 0;
     
     let articleContainer = document.querySelector('article, main, [role="main"], .article-content, .post-content, .entry-content');
     let searchArea = articleContainer || document.body;
@@ -108,6 +114,14 @@ document.getElementById('analyzeBtn').addEventListener('click', async () => {
         .map(el => el.innerText.trim())
         .filter(text => text.length > 20)
         .join(' ');
+        
+    // 2. SEO FALLBACK: If there's barely any text, grab the hidden description tags!
+    if (paragraphs.split(' ').length < 20) {
+        const metaDesc = document.querySelector('meta[name="description"]');
+        const ogDesc = document.querySelector('meta[property="og:description"]');
+        if (metaDesc) paragraphs += " " + metaDesc.content;
+        if (ogDesc) paragraphs += " " + ogDesc.content;
+    }
     
-    return { headline: headline.trim(), body: paragraphs };
+    return { headline: headline.trim(), body: paragraphs.trim(), hasMedia: hasMedia };
   }

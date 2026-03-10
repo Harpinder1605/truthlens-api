@@ -12,7 +12,7 @@ try:
     svm_model = joblib.load('clickbait_model.pkl')
     svm_vectorizer = joblib.load('vectorizer.pkl')
 except Exception as e:
-    print("Error loading models. Did you run train_model.py first?", e)
+    print("Error loading models:", e)
 
 @app.route('/api/analyze', methods=['POST'])
 def analyze():
@@ -22,9 +22,27 @@ def analyze():
         
     headline = data['headline']
     body = data['body']
+    has_media = data.get('hasMedia', False)
     
-    if len(body.split()) < 10:
-        return jsonify({"error": "Not enough text content found."}), 400
+    word_count = len(body.split())
+
+    # --- EDGE CASE: Video/Media Content with low text ---
+    if word_count < 10:
+        if has_media:
+            return jsonify({
+                "headline": headline,
+                "svm_flag": False,
+                "similarity_score": 0,
+                "final_warning": False,
+                "message": "Media Content: Not enough text to verify.",
+                "risk_percentage": 0,
+                "word_count": word_count,
+                "read_time": 0,
+                "trigger_words": [],
+                "is_media": True
+            })
+        else:
+            return jsonify({"error": "Not enough text content found to analyze."}), 400
 
     # --- 1. Cosine Similarity ---
     tfidf_matrix = svm_vectorizer.transform([headline, body])
@@ -36,20 +54,16 @@ def analyze():
     is_clickbait_svm = bool(int(svm_prediction) == 1)
 
     # --- FEATURE 1: Risk Confidence Percentage ---
-    # Calculate distance from the SVM hyperplane and convert to a probability (Sigmoid)
     distance = svm_model.decision_function(headline_vector)[0]
     svm_prob = 1 / (1 + math.exp(-distance))
     
-    # Formula: 60% weight to the SVM, 40% weight to the lack of similarity
     risk_percentage = int(((svm_prob * 0.6) + ((1 - sim_score) * 0.4)) * 100)
-    risk_percentage = max(0, min(100, risk_percentage)) # Keep between 0 and 100
+    risk_percentage = max(0, min(100, risk_percentage))
 
     # --- FEATURE 2: Read Time & Content Depth ---
-    word_count = len(body.split())
-    read_time = max(1, round(word_count / 250)) # Average reading speed is 250 WPM
+    read_time = max(1, round(word_count / 250))
 
     # --- FEATURE 3: Explainable AI (Trigger Words) ---
-    # Look inside the SVM's brain to find which words caused the high score
     headline_words = [ "".join(c for c in word if c.isalnum()) for word in headline.lower().split() ]
     trigger_words = []
     vocab = svm_vectorizer.vocabulary_
@@ -59,14 +73,12 @@ def analyze():
         if word in vocab:
             idx = vocab[word]
             weight = coefs[idx]
-            # If the model strongly associates this word with clickbait
             if weight > 0.4: 
                 trigger_words.append(word)
                 
-    # Remove duplicates
     trigger_words = list(set(trigger_words))
 
-    # --- Smart Verdict Logic ---
+    # --- Smarter Verdict Logic ---
     if is_clickbait_svm and sim_score >= 0.25:
         final_warning = False
         verdict_msg = "Sensational, but verifiable."
@@ -80,7 +92,6 @@ def analyze():
         final_warning = False
         verdict_msg = "Seems Reliable."
 
-    # Send the massive new data package back to the extension
     response = {
         "headline": headline,
         "svm_flag": is_clickbait_svm,
@@ -90,7 +101,8 @@ def analyze():
         "risk_percentage": risk_percentage,
         "word_count": word_count,
         "read_time": read_time,
-        "trigger_words": trigger_words
+        "trigger_words": trigger_words,
+        "is_media": False
     }
 
     return jsonify(response)
