@@ -82,9 +82,7 @@ def analyze():
     is_media_flag = False
 
     # NEW LOGIC: Handling YouTube and Media Noise
-    # If it has a video, and the word count is under 350 words, AND the similarity is near zero...
-    # It means we scraped sidebar noise (like YouTube comments) instead of an actual article.
-    if has_media and (word_count < 50 or (word_count < 350 and sim_score < 0.15)):
+    if has_media and (word_count < 80 or sim_score < 0.15):
         is_media_flag = True
         final_warning = False
         verdict_msg = "Media Content: Context is inside the video."

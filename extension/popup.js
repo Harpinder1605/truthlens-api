@@ -32,14 +32,14 @@ document.getElementById('analyzeBtn').addEventListener('click', async () => {
         });
   
         if (!response.ok) {
-            const errData = await response.json();
+            const errData = await response.json().catch(() => ({}));
             alert(errData.error || "The AI Server could not process this page.");
             btn.disabled = false; loading.style.display = 'none'; return;
         }
 
         const aiResult = await response.json();
   
-        // UI Updates
+        // UI Updates matching the new HTML
         document.getElementById('simScore').innerText = aiResult.is_media ? "N/A" : aiResult.similarity_score;
         document.getElementById('riskScore').innerText = aiResult.is_media ? "N/A" : (aiResult.risk_percentage + "%");
         document.getElementById('readTime').innerText = aiResult.is_media ? "Video/Media" : (aiResult.read_time + " min (" + aiResult.word_count + " words)");
@@ -65,7 +65,7 @@ document.getElementById('analyzeBtn').addEventListener('click', async () => {
         const verdictEl = document.getElementById('verdictText');
         verdictEl.innerText = aiResult.message;
         
-        // Handle the new Media (Neutral) state
+        // Handle the new Media (Neutral) state vs Clickbait (Danger) vs Safe
         if (aiResult.is_media) {
             resultBox.className = 'neutral-border';
             verdictEl.className = 'verdict neutral-bg';
@@ -83,7 +83,7 @@ document.getElementById('analyzeBtn').addEventListener('click', async () => {
   
     } catch (error) {
       console.error(error);
-      alert("Error connecting to AI Server. Is it running?");
+      alert("Error connecting to AI Server. Is it running locally on port 5000?");
       btn.disabled = false;
       loading.style.display = 'none';
     }
@@ -98,8 +98,12 @@ document.getElementById('analyzeBtn').addEventListener('click', async () => {
     else if (ogTitle) headline = ogTitle.content;
     else headline = document.title;
 
-    // 1. Detect if the page is media-heavy (Videos, YouTube iframes)
-    const hasMedia = document.querySelectorAll('video, iframe[src*="youtube"], iframe[src*="vimeo"]').length > 0;
+    // SMARTER MEDIA DETECTION: Expanded to cover CNN, NYT, AMP pages, and enterprise players like JWPlayer/Brightcove
+    const hasVideoElements = document.querySelectorAll('video, audio, iframe[src*="youtube"], iframe[src*="vimeo"], iframe[src*="dailymotion"], iframe[src*="twitch"], iframe[src*="rumble"], iframe[src*="tiktok"], smp-toucan-player, cnn-video, amp-video').length > 0;
+    const hasVideoMeta = document.querySelectorAll('meta[property^="og:video"], meta[name^="twitter:player"]').length > 0;
+    const hasVideoClass = document.querySelectorAll('.video-player, [data-video-player], .media-player, .vjs-tech, .bbc-video-player, [id^="toucan-"], .jwplayer, .bc-player, .vhs-video, .video-container, .wistia_embed, [data-testid="videoComponent"]').length > 0;
+    
+    const hasMedia = hasVideoElements || hasVideoMeta || hasVideoClass;
     
     let articleContainer = document.querySelector('article, main, [role="main"], .article-content, .post-content, .entry-content');
     let searchArea = articleContainer || document.body;
@@ -115,7 +119,7 @@ document.getElementById('analyzeBtn').addEventListener('click', async () => {
         .filter(text => text.length > 20)
         .join(' ');
         
-    // 2. SEO FALLBACK: If there's barely any text, grab the hidden description tags!
+    // SEO FALLBACK: If there's barely any text, grab the hidden description tags!
     if (paragraphs.split(' ').length < 20) {
         const metaDesc = document.querySelector('meta[name="description"]');
         const ogDesc = document.querySelector('meta[property="og:description"]');
