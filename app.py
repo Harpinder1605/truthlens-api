@@ -79,7 +79,19 @@ def analyze():
     trigger_words = list(set(trigger_words))
 
     # --- Smarter Verdict Logic ---
-    if is_clickbait_svm and sim_score >= 0.25:
+    is_media_flag = False
+
+    # NEW LOGIC: Handling YouTube and Media Noise
+    # If it has a video, and the word count is under 350 words, AND the similarity is near zero...
+    # It means we scraped sidebar noise (like YouTube comments) instead of an actual article.
+    if has_media and (word_count < 50 or (word_count < 350 and sim_score < 0.15)):
+        is_media_flag = True
+        final_warning = False
+        verdict_msg = "Media Content: Context is inside the video."
+        risk_percentage = 0
+        sim_score = 0
+        
+    elif is_clickbait_svm and sim_score >= 0.25:
         final_warning = False
         verdict_msg = "Sensational, but verifiable."
     elif is_clickbait_svm and sim_score < 0.25:
@@ -102,7 +114,7 @@ def analyze():
         "word_count": word_count,
         "read_time": read_time,
         "trigger_words": trigger_words,
-        "is_media": False
+        "is_media": is_media_flag
     }
 
     return jsonify(response)
