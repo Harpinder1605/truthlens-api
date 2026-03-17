@@ -1,6 +1,47 @@
 // --- CONFIGURATION ---
-const API_URL = 'https://truthlens-api-xnvw.onrender.com/api/analyze'; 
+const API_URL = 'https://truthlens-api-xnvw.onrender.com/*'; 
 
+// --- PRIVACY SHIELD LOGIC ---
+const shieldToggle = document.getElementById('shieldToggle');
+
+if (shieldToggle) {
+    // 1. Check current status
+    chrome.declarativeNetRequest.getEnabledRulesets((rulesetIds) => {
+        if (rulesetIds.includes("privacy_shield")) {
+            shieldToggle.checked = true;
+            fetchTrackerStats(); // Fetch stats if shield is ON
+        }
+    });
+
+    // 2. Listen for switch flip
+    shieldToggle.addEventListener('change', async (e) => {
+        if (e.target.checked) {
+            await chrome.declarativeNetRequest.updateEnabledRulesets({ enableRulesetIds: ["privacy_shield"], disableRulesetIds: [] });
+            fetchTrackerStats(); // Load stats immediately
+        } else {
+            await chrome.declarativeNetRequest.updateEnabledRulesets({ enableRulesetIds: [], disableRulesetIds: ["privacy_shield"] });
+            document.getElementById('trackerStats').style.display = 'none'; // Hide stats
+        }
+    });
+}
+
+// 3. NEW: Ask background.js for the blocked numbers and names
+async function fetchTrackerStats() {
+    let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!tab) return;
+
+    chrome.runtime.sendMessage({ action: "getBlockedStats", tabId: tab.id }, (response) => {
+        if (response && response.count > 0) {
+            document.getElementById('trackerStats').style.display = 'block';
+            document.getElementById('blockCount').innerText = response.count;
+            document.getElementById('blockList').innerText = response.domains.join(', ');
+        } else {
+            document.getElementById('trackerStats').style.display = 'none';
+        }
+    });
+}
+
+// --- EXISTING ML ANALYSIS LOGIC ---
 document.getElementById('analyzeBtn').addEventListener('click', async () => {
     const btn = document.getElementById('analyzeBtn');
     const loading = document.getElementById('loading');
@@ -98,7 +139,6 @@ document.getElementById('analyzeBtn').addEventListener('click', async () => {
     else if (ogTitle) headline = ogTitle.content;
     else headline = document.title;
 
-    // SMARTER MEDIA DETECTION: Expanded to cover CNN, NYT, AMP pages, and enterprise players like JWPlayer/Brightcove
     const hasVideoElements = document.querySelectorAll('video, audio, iframe[src*="youtube"], iframe[src*="vimeo"], iframe[src*="dailymotion"], iframe[src*="twitch"], iframe[src*="rumble"], iframe[src*="tiktok"], smp-toucan-player, cnn-video, amp-video').length > 0;
     const hasVideoMeta = document.querySelectorAll('meta[property^="og:video"], meta[name^="twitter:player"]').length > 0;
     const hasVideoClass = document.querySelectorAll('.video-player, [data-video-player], .media-player, .vjs-tech, .bbc-video-player, [id^="toucan-"], .jwplayer, .bc-player, .vhs-video, .video-container, .wistia_embed, [data-testid="videoComponent"]').length > 0;
@@ -119,7 +159,6 @@ document.getElementById('analyzeBtn').addEventListener('click', async () => {
         .filter(text => text.length > 20)
         .join(' ');
         
-    // SEO FALLBACK: If there's barely any text, grab the hidden description tags!
     if (paragraphs.split(' ').length < 20) {
         const metaDesc = document.querySelector('meta[name="description"]');
         const ogDesc = document.querySelector('meta[property="og:description"]');
