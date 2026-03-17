@@ -1,5 +1,5 @@
 // --- CONFIGURATION ---
-const API_URL = 'https://truthlens-api-xnvw.onrender.com/*'; 
+const API_URL = 'https://truthlens-api-xnvw.onrender.com/api/analyze'; 
 
 // --- PRIVACY SHIELD LOGIC ---
 const shieldToggle = document.getElementById('shieldToggle');
