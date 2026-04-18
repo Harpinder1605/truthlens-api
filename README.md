@@ -1,52 +1,132 @@
-🔍 TruthLens AI
+👁️🛡️ TruthLens AI
 
-TruthLens AI is a full-stack Machine Learning browser extension designed to detect clickbait and misleading headlines in real-time. It uses Natural Language Processing (NLP) to mathematically compare a webpage's headline to its actual body content, protecting users from "false promise" journalism.
+TruthLens AI is a robust, real-time Chrome Extension designed to detect clickbait, misleading headlines, and fake news. Built as a comprehensive Full-Stack Machine Learning project, it bridges a Manifest V3 browser extension with a Flask-powered AI backend to analyze context, verify claims, and protect user privacy.
 
-🚀 Features
+🌟 Key Features
 
-Real-Time DOM Scraping: Intelligently extracts headers and article body text while ignoring ads and navigation bars.
+🧠 Machine Learning Deception Detection: Utilizes a pre-trained Support Vector Machine (SVM) and TF-IDF Cosine Similarity to compare an article's headline against its body text, catching sensationalized or disconnected claims.
 
-Support Vector Machine (SVM): Trained on 32,000+ real-world articles to recognize historical clickbait patterns with ~95% accuracy.
+🎥 YouTube Video Analysis: Bypasses frontend scraping limitations by directly extracting video IDs and querying the youtube-transcript-api on the backend to run ML analysis on spoken video subtitles.
 
-Contextual NLP Verification: Calculates the Cosine Similarity between the headline and the body text. If the body doesn't deliver on the headline's promise, the extension flags it.
+🚨 Google Fact-Check Integration: Automatically cross-references headlines with the Google Fact Check Explorer API to immediately flag debunked claims from sources like Snopes, Reuters, and PolitiFact.
 
-Cloud API Backend: Powered by a Python/Flask server hosted on Render, allowing instant asynchronous analysis without lagging the browser.
+✍️ In-Page Trigger Highlighting: Dynamically injects a DOM TreeWalker script to highlight sensational "trigger words" directly on the webpage in a Grammarly-style format.
 
-🛠️ Technology Stack
+📊 Domain Reputation Scoring: Uses Chrome's local storage to build a historical "Trust Score" for websites based on your browsing history and previous AI verdicts.
 
-Frontend: HTML, CSS (Premium UI), JavaScript (Chrome Manifest V3)
+🛡️ Active Privacy Shield: Implements Chrome's declarativeNetRequest API to silently block known tracking domains and analytics scripts, reporting blocked counts directly to the premium UI.
 
-Backend: Python, Flask, Gunicorn
+🔄 Active Learning Feedback Loop: Features a crowdsourced "Yes/No" feedback mechanism that writes user corrections to a backend CSV, creating a pipeline for continuous model retraining.
 
-Machine Learning: Scikit-Learn (LinearSVC, TF-IDF, Cosine Similarity), Pandas
+🛠️ Tech Stack
 
-📥 How to Install the Extension (For Users)
+Frontend (Chrome Extension):
 
-You can install this extension directly into your Chrome browser in 30 seconds:
+HTML5 / CSS3 (Premium Metallic/Golden UI Design)
 
-Click the green Code button at the top of this repository and select Download ZIP.
+JavaScript (ES6+)
 
-Extract the downloaded ZIP file on your computer.
+Chrome Extensions API (Manifest V3, declarativeNetRequest, scripting, storage)
 
-Open Google Chrome and type chrome://extensions/ in the URL bar.
+Backend (AI Server):
+
+Python 3
+
+Flask & Flask-CORS (REST API)
+
+Scikit-Learn & Joblib (SVM Model & Vectorizer)
+
+youtube-transcript-api (Video subtitle extraction)
+
+requests (Google Fact Check API communication)
+
+🚀 Installation & Setup
+
+Because TruthLens relies on both a browser extension and an AI processing server, you need to set up both environments.
+
+1. Backend Setup (Flask AI Server)
+
+Navigate to the backend directory:
+
+cd truthlens-api
+
+
+
+Create and activate a Python virtual environment:
+
+python -m venv venv
+# Windows:
+venv\Scripts\activate
+# macOS/Linux:
+source venv/bin/activate
+
+
+
+Install the required Python dependencies:
+
+pip install flask flask-cors scikit-learn joblib youtube-transcript-api requests
+
+
+
+Start the local development server:
+
+python app.py
+
+
+
+The server should now be running on http://127.0.0.1:5000.
+
+Server Health Check:
+Verify that your server is running properly by checking these links:
+
+Local: http://127.0.0.1:5000/
+
+Production (Render): https://truthlens-api-xnvw.onrender.com/
+
+2. Frontend Setup (Chrome Extension)
+
+Open Google Chrome and navigate to chrome://extensions/.
 
 Turn on Developer mode (toggle switch in the top right corner).
 
-Click the Load unpacked button in the top left.
+Click the Load unpacked button.
 
-Select the extension folder from the files you just extracted.
+Select the folder containing your extension files (manifest.json, popup.html, popup.js, etc.).
 
-Click the TruthLens AI icon in your browser toolbar on any news article!
+Pin the TruthLens golden icon to your toolbar for easy access!
 
-🧠 How to Train the Model (For Developers)
+📖 How to Use
 
-If you want to run the training algorithm locally:
+Navigate to any news article, blog post, or YouTube video.
 
-Clone this repository.
+Click the TruthLens icon in your Chrome toolbar.
 
-Download the original dataset from Kaggle and place clickbait_data.csv in the root folder.
+Toggle the Privacy Shield to instantly block trackers on the page.
 
-Install dependencies: pip install -r requirements.txt
+Click Analyze Current Page to initiate the AI scan.
 
-Run the training script: python train_model.py
-(Note: The pre-trained .pkl files are already included in this repo, so training is optional).
+Review the Golden Result Card for:
+
+Deception Probability & Similarity Scores
+
+Domain Trust Rating
+
+Trigger Words (Check the webpage itself for highlights!)
+
+Debunk alerts (if the claim was fact-checked by Google).
+
+Click Yes or No at the bottom to help retrain the model.
+
+📁 Architecture Overview
+
+manifest.json: The core configuration file requesting necessary permissions (ActiveTab, Storage, DNR).
+
+popup.js: Handles the UI logic, DOM scraping injection, and HTTP requests to the backend.
+
+background.js: A service worker that listens for blocked tracker events and passes statistics to the popup.
+
+app.py: The Flask REST API that receives scraped text/video IDs, fetches transcripts, queries Google Fact Check, and processes the Machine Learning pipelines.
+
+clickbait_model.pkl / vectorizer.pkl: The exported Scikit-Learn brain of the application.
+
+Created as a Full-Stack AI Graduation Project.
