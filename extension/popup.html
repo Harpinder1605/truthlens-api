@@ -6,70 +6,179 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg-color: #f8fafc; --card-bg: #ffffff;
-      --primary: #4f46e5; --text-main: #0f172a; --text-sub: #64748b;
-      --border: #e2e8f0; --danger-light: #fef2f2; --danger-dark: #991b1b;
-      --danger-accent: #ef4444; --safe-light: #f0fdf4; --safe-dark: #166534;
+      /* Luxury Dark Theme Background */
+      --bg-color: #0d0e12; 
+      --card-bg: #16181d;
+      
+      /* Base Text Colors for Dark Mode */
+      --text-main: #f8fafc; 
+      --text-sub: #94a3b8;
+      --border: #2a2e37; 
+
+      /* The Premium Golden Palette */
+      --gold-light: #fcf6ba;
+      --gold-base: #d4af37;
+      --gold-dark: #aa771c;
+      --gold-gradient: linear-gradient(135deg, #bf953f 0%, #fcf6ba 25%, #b38728 50%, #fbf5b7 75%, #aa771c 100%);
+      --gold-gradient-pan: linear-gradient(to right, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c, #bf953f, #fcf6ba);
+
+      /* Semantic Colors (Adapted for Dark Mode default) */
+      --danger-light: rgba(239, 68, 68, 0.15); 
+      --danger-dark: #f87171;
+      --danger-accent: #ef4444; 
+      --safe-light: rgba(34, 197, 94, 0.15); 
+      --safe-dark: #4ade80;
       --safe-accent: #22c55e;
-      --neutral-light: #f1f5f9; --neutral-dark: #475569; --neutral-accent: #94a3b8;
+      --neutral-light: rgba(148, 163, 184, 0.15); 
+      --neutral-dark: #cbd5e1; 
+      --neutral-accent: #64748b;
     }
 
-    body { font-family: 'Inter', sans-serif; width: 340px; margin: 0; padding: 20px; background: var(--bg-color); color: var(--text-main); }
+    body { 
+      font-family: 'Inter', sans-serif; 
+      width: 340px; 
+      margin: 0; 
+      padding: 20px; 
+      background: var(--bg-color); 
+      color: var(--text-main); 
+      animation: fadeIn 0.5s ease-out;
+    }
+
+    /* Keyframe Animations */
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes bgPan { to { background-position: 200% center; } }
+    @keyframes shimmerSweep { 
+      0% { left: -100%; } 
+      20% { left: 200%; } 
+      100% { left: 200%; } 
+    }
+    @keyframes magicGlow { 
+      0% { filter: drop-shadow(0 0 2px rgba(212, 175, 55, 0.4)); transform: scale(1); } 
+      50% { filter: drop-shadow(0 0 8px rgba(252, 246, 186, 0.9)); transform: scale(1.15); } 
+      100% { filter: drop-shadow(0 0 2px rgba(212, 175, 55, 0.4)); transform: scale(1); } 
+    }
+
     .header { display: flex; align-items: center; margin-bottom: 4px; }
-    .header svg { width: 24px; height: 24px; color: var(--primary); margin-right: 8px; }
+    .header svg { width: 24px; height: 24px; color: var(--gold-base); margin-right: 8px; filter: drop-shadow(0 2px 4px rgba(212, 175, 55, 0.4)); }
     h2 { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
-    h2 span { color: var(--primary); }
+    
+    /* Shiny Gold Text for Header */
+    h2 span { 
+      background: var(--gold-gradient-pan);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: bgPan 4s linear infinite;
+    }
     .subtitle { font-size: 13px; color: var(--text-sub); margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
 
-    button { width: 100%; padding: 12px; background: linear-gradient(135deg, var(--primary) 0%, #3b82f6 100%); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2); transition: all 0.2s; margin-bottom: 16px; }
-    button:hover { transform: translateY(-1px); }
-    button:disabled { background: #cbd5e1; box-shadow: none; cursor: not-allowed; }
+    /* Main Analyze Button - Golden & Animated */
+    button { 
+      width: 100%; 
+      padding: 12px; 
+      background: var(--gold-gradient-pan);
+      background-size: 200% auto;
+      color: #1a1a1a; 
+      border: 1px solid #fff3cd; 
+      border-radius: 8px; 
+      font-size: 14px; 
+      font-weight: 700; 
+      cursor: pointer; 
+      display: flex; 
+      justify-content: center; 
+      align-items: center; 
+      box-shadow: 0 4px 15px rgba(212, 175, 55, 0.25); 
+      transition: all 0.2s; 
+      margin-bottom: 16px; 
+      animation: bgPan 3s linear infinite;
+    }
+    button:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 6px 20px rgba(212, 175, 55, 0.5); }
+    button:disabled { background: #334155; color: #94a3b8; box-shadow: none; border-color: #475569; cursor: not-allowed; animation: none; }
     button svg { margin-right: 8px; width: 18px; height: 18px; }
 
-    /* Privacy Shield Toggle UI */
-    .shield-container { display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); padding: 12px; border-radius: 8px; border: 1px solid var(--border); box-shadow: 0 2px 4px -1px rgba(0,0,0,0.02); }
+    /* Privacy Shield Toggle UI (Dark Card) */
+    .shield-container { display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); padding: 12px; border-radius: 8px; border: 1px solid var(--border); box-shadow: inset 0 1px 1px rgba(255,255,255,0.05); }
     .shield-info { display: flex; align-items: center; font-size: 14px; font-weight: 600; color: var(--text-main); }
-    .shield-info svg { width: 16px; height: 16px; color: var(--safe-accent); margin-right: 8px; }
+    .shield-info svg { width: 16px; height: 16px; color: var(--gold-base); margin-right: 8px; animation: magicGlow 2s infinite ease-in-out; }
     
-    /* The Switch */
     .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
     .switch input { opacity: 0; width: 0; height: 0; }
-    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .3s; border-radius: 24px; }
-    .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; }
-    input:checked + .slider { background-color: var(--primary); }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #334155; transition: .3s; border-radius: 24px; }
+    .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+    input:checked + .slider { background: var(--gold-gradient-pan); background-size: 200% auto; animation: bgPan 3s linear infinite; }
     input:checked + .slider:before { transform: translateX(20px); }
 
-    /* NEW: Tracker Stats Box */
-    #trackerStats { display: none; margin-top: 8px; padding: 12px; background: var(--safe-light); border-radius: 8px; border: 1px solid #bbf7d0; }
+    /* Tracker Stats Box */
+    #trackerStats { display: none; margin-top: 8px; padding: 12px; background: rgba(34, 197, 94, 0.1); border-radius: 8px; border: 1px solid rgba(34, 197, 94, 0.3); }
     .stats-header { font-size: 13px; font-weight: 600; color: var(--safe-dark); margin-bottom: 6px; display: flex; justify-content: space-between;}
-    .stats-list { font-size: 11px; color: #166534; max-height: 50px; overflow-y: auto; font-family: monospace; line-height: 1.4; word-break: break-all; }
+    .stats-list { font-size: 11px; color: #4ade80; max-height: 50px; overflow-y: auto; font-family: monospace; line-height: 1.4; word-break: break-all; }
 
     #loading { display: none; text-align: center; margin-top: 20px; }
-    .spinner { border: 3px solid rgba(0,0,0,0.05); border-top: 3px solid var(--primary); border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; margin: 0 auto 10px auto; }
+    .spinner { border: 3px solid rgba(212, 175, 55, 0.15); border-top: 3px solid var(--gold-base); border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; margin: 0 auto 10px auto; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    .loading-text { font-size: 13px; color: var(--text-sub); font-weight: 500; }
+    .loading-text { font-size: 13px; color: var(--gold-light); font-weight: 500; letter-spacing: 0.5px; }
 
-    #resultBox { display: none; margin-top: 20px; background: var(--card-bg); border-radius: 12px; padding: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid var(--border); border-left: 4px solid var(--text-sub); }
+    /* =======================================================
+       THE PREMIUM GOLDEN CARD (Result Box)
+       ======================================================= */
+    #resultBox { 
+      display: none; 
+      margin-top: 20px; 
+      background: var(--gold-gradient);
+      background-size: 200% 200%;
+      border-radius: 12px; 
+      padding: 16px; 
+      border: 1px solid #fff3cd;
+      box-shadow: 0 12px 30px rgba(179, 135, 40, 0.3), inset 0 1px 2px rgba(255,255,255,0.8); 
+      position: relative;
+      overflow: hidden;
+      animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+
+      /* LOCAL VARIABLE OVERRIDES: Forces popup.js to use dark colors inside the gold card */
+      --text-main: #111827; 
+      --text-sub: #523b03; 
+      --bg-color: rgba(255, 255, 255, 0.4); /* Translucent white for metric boxes */
+      --border: rgba(179, 135, 40, 0.4);
+      --danger-dark: #991b1b;
+      --safe-dark: #064e3b;
+    }
+
+    /* Light Sweep Animation over the Gold Card */
+    #resultBox::after {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%;
+      width: 50%; height: 100%;
+      background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 100%);
+      transform: skewX(-20deg);
+      animation: shimmerSweep 5s infinite;
+      pointer-events: none;
+    }
     
-    .metric-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 13px; color: var(--text-sub); }
-    .metric-label { font-weight: 500; }
-    .metric-value { font-weight: 700; color: var(--text-main); background: var(--bg-color); padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border); }
+    .metric-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 13px; color: var(--text-sub); position: relative; z-index: 2; }
+    .metric-label { font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+    .metric-value { font-weight: 800; color: var(--text-main); background: var(--bg-color); padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border); box-shadow: inset 0 1px 2px rgba(0,0,0,0.05); }
     
     #riskScore { font-size: 15px; }
 
-    #triggerContainer { margin-top: 12px; margin-bottom: 12px; display: none; }
+    #triggerContainer { margin-top: 12px; margin-bottom: 12px; display: none; position: relative; z-index: 2; }
     .trigger-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
-    .trigger-tag { background: #fee2e2; color: #991b1b; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; border: 1px solid #fca5a5; letter-spacing: 0.5px; }
+    .trigger-tag { background: rgba(220, 38, 38, 0.15); color: #991b1b; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 800; text-transform: uppercase; border: 1px solid rgba(220, 38, 38, 0.3); letter-spacing: 0.5px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
 
-    .verdict-container { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
-    .verdict { font-size: 15px; font-weight: 700; text-align: center; padding: 10px; border-radius: 8px; }
+    .verdict-container { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); position: relative; z-index: 2; }
+    .verdict { font-size: 15px; font-weight: 800; text-align: center; padding: 12px; border-radius: 8px; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
 
-    .danger-border { border-left-color: var(--danger-accent) !important; }
-    .safe-border { border-left-color: var(--safe-accent) !important; }
-    .neutral-border { border-left-color: var(--neutral-accent) !important; }
-    .danger-bg { background-color: var(--danger-light); color: var(--danger-dark); border: 1px solid #fecaca; }
-    .safe-bg { background-color: var(--safe-light); color: var(--safe-dark); border: 1px solid #bbf7d0; }
-    .neutral-bg { background-color: var(--neutral-light); color: var(--neutral-dark); border: 1px solid #cbd5e1; }
+    /* Verdict Dynamic Classes (Redefined for Golden Card) */
+    .danger-border { border-color: #ef4444 !important; box-shadow: 0 0 25px rgba(239, 68, 68, 0.5), inset 0 1px 2px rgba(255,255,255,0.8) !important; }
+    .safe-border { border-color: #22c55e !important; box-shadow: 0 0 25px rgba(34, 197, 94, 0.5), inset 0 1px 2px rgba(255,255,255,0.8) !important; }
+    .neutral-border { border-color: #64748b !important; box-shadow: 0 0 25px rgba(100, 116, 139, 0.5), inset 0 1px 2px rgba(255,255,255,0.8) !important; }
+    
+    .danger-bg { background-color: rgba(239, 68, 68, 0.15); color: #991b1b; border: 1px solid rgba(239, 68, 68, 0.4); }
+    .safe-bg { background-color: rgba(34, 197, 94, 0.15); color: #064e3b; border: 1px solid rgba(34, 197, 94, 0.4); }
+    .neutral-bg { background-color: rgba(255, 255, 255, 0.3); color: #1e293b; border: 1px solid rgba(100, 116, 139, 0.3); }
+
   </style>
 </head>
 <body>
@@ -82,7 +191,7 @@
   <div class="subtitle">Real-time clickbait & integrity analysis</div>
   
   <button id="analyzeBtn">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
       <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
     </svg>
     Analyze Current Page
@@ -101,7 +210,6 @@
     </label>
   </div>
 
-  <!-- NEW: Tracker Stats Box -->
   <div id="trackerStats">
     <div class="stats-header">
       <span>Requests Blocked:</span>
@@ -115,6 +223,7 @@
     <div class="loading-text">Mining data & running ML models...</div>
   </div>
 
+  <!-- THE GOLDEN CARD -->
   <div id="resultBox">
     <div class="metric-row">
       <span class="metric-label">Deception Probability</span>
@@ -128,13 +237,38 @@
       <span class="metric-label">Estimated Length</span>
       <span id="readTime" class="metric-value">--</span>
     </div>
+    
+    <div class="metric-row" id="domainTrustRow" style="display: none;">
+      <span class="metric-label">Domain Trust</span>
+      <span id="domainTrustScore" class="metric-value">--% Safe</span>
+    </div>
+
+    <!-- Adapted specifically for the Gold Card Background -->
+    <div id="factCheckAlert" style="display: none; position: relative; z-index: 2; margin-top: 12px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); padding: 10px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+      <strong style="color: #991b1b; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">🚨 FACT CHECK ALERT:</strong>
+      <p id="factCheckText" style="font-size: 12px; font-weight: 600; margin: 6px 0; color: #1a1a1a;"></p>
+      <a id="factCheckLink" href="#" target="_blank" style="font-size: 12px; color: #b91c1c; font-weight: 800; text-decoration: none;">Read the Debunk &rarr;</a>
+    </div>
+
     <div id="triggerContainer">
-      <div class="metric-label" style="font-size: 12px;">SVM Trigger Words:</div>
+      <div class="metric-label">SVM Trigger Words:</div>
       <div id="triggerWords" class="trigger-tags"></div>
     </div>
+
     <div class="verdict-container">
       <div id="verdictText" class="verdict">--</div>
     </div>
+    
+    <!-- Crowdsourced Feedback UI -->
+    <div id="feedbackContainer" style="display: none; position: relative; z-index: 2; margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border); text-align: center;">
+      <div style="font-size: 12px; font-weight: 600; color: var(--text-sub); margin-bottom: 8px;">Did the AI get this right?</div>
+      <div style="display: flex; gap: 8px; justify-content: center;">
+        <button id="feedbackYesBtn" style="margin: 0; padding: 6px 14px; background: rgba(34, 197, 94, 0.2); color: #064e3b; border: 1px solid rgba(34, 197, 94, 0.5); width: auto; font-weight: 800; animation: none; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">Yes</button>
+        <button id="feedbackNoBtn" style="margin: 0; padding: 6px 14px; background: rgba(239, 68, 68, 0.2); color: #991b1b; border: 1px solid rgba(239, 68, 68, 0.5); width: auto; font-weight: 800; animation: none; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">No</button>
+      </div>
+      <div id="feedbackThanks" style="display: none; font-size: 12px; color: #1a1a1a; margin-top: 10px; font-weight: 800;">Thanks for helping retrain the model!</div>
+    </div>
+
   </div>
 
   <script src="popup.js"></script>
