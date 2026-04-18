@@ -81,7 +81,7 @@ Verify that your server is running properly by checking these links:
 
 Local: http://127.0.0.1:5000/
 
-Production (Render): https://truthlens-api-xnvw.onrender.com/
+Production (Render): https://truthlens-api-str5.onrender.com/
 
 2. Frontend Setup (Chrome Extension)
 
