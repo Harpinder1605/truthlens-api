@@ -6,7 +6,7 @@ TruthLens AI is a robust, real-time Chrome Extension designed to detect clickbai
 
 🧠 Machine Learning Deception Detection: Utilizes a pre-trained Support Vector Machine (SVM) and TF-IDF Cosine Similarity to compare an article's headline against its body text, catching sensationalized or disconnected claims.
 
-🎥 YouTube Video Analysis: Bypasses frontend scraping limitations by directly extracting video IDs and querying the youtube-transcript-api on the backend to run ML analysis on spoken video subtitles.
+🎥 YouTube Video Analysis: Bypasses frontend scraping limitations by directly extracting video IDs and querying the youtube-transcript-api on the backend to run ML analysis on spoken video subtitles. (Note: YouTube aggressively blocks datacenter IPs. This feature works perfectly on local servers but may be blocked when deployed to cloud services like Render).
 
 🚨 Google Fact-Check Integration: Automatically cross-references headlines with the Google Fact Check Explorer API to immediately flag debunked claims from sources like Snopes, Reuters, and PolitiFact.
 
@@ -36,6 +36,8 @@ Flask & Flask-CORS (REST API)
 
 Scikit-Learn & Joblib (SVM Model & Vectorizer)
 
+gunicorn (Production WSGI Server)
+
 youtube-transcript-api (Video subtitle extraction)
 
 requests (Google Fact Check API communication)
@@ -44,12 +46,11 @@ requests (Google Fact Check API communication)
 
 Because TruthLens relies on both a browser extension and an AI processing server, you need to set up both environments.
 
-1. Backend Setup (Flask AI Server)
+1. Backend Setup (Local Development)
 
 Navigate to the backend directory:
 
 cd truthlens-api
-
 
 
 Create and activate a Python virtual environment:
@@ -61,11 +62,9 @@ venv\Scripts\activate
 source venv/bin/activate
 
 
-
 Install the required Python dependencies:
 
-pip install flask flask-cors scikit-learn joblib youtube-transcript-api requests
-
+pip install flask flask-cors scikit-learn joblib youtube-transcript-api requests gunicorn
 
 
 Start the local development server:
@@ -73,17 +72,21 @@ Start the local development server:
 python app.py
 
 
-
 The server should now be running on http://127.0.0.1:5000.
 
-Server Health Check:
-Verify that your server is running properly by checking these links:
+2. Production Deployment (Render)
 
-Local: http://127.0.0.1:5000/
+When deploying your Flask app to Render as a Web Service, use the following configuration to ensure the server processes ML requests smoothly without premature timeouts:
 
-Production (Render): https://truthlens-api-str5.onrender.com/
+Build Command: pip install -r requirements.txt
 
-2. Frontend Setup (Chrome Extension)
+Start Command: gunicorn app:app --timeout 180
+
+(Note: The --timeout 180 flag ensures the server doesn't drop connections for up to 180 seconds, allowing enough time for large transcript extractions and deep AI analysis).
+
+⚠️ Important Note on YouTube Analysis: Because YouTube actively blocks requests originating from cloud provider IPs (Render, AWS, Google Cloud, etc.), the YouTube Video Analysis feature will likely fail in a production environment. To test the YouTube transcript extraction, please run the backend server locally.
+
+3. Frontend Setup (Chrome Extension)
 
 Open Google Chrome and navigate to chrome://extensions/.
 
@@ -94,6 +97,14 @@ Click the Load unpacked button.
 Select the folder containing your extension files (manifest.json, popup.html, popup.js, etc.).
 
 Pin the TruthLens golden icon to your toolbar for easy access!
+
+4. Server Health Check
+
+Verify that your server is running properly by checking these links:
+
+Local: http://127.0.0.1:5000/
+
+Production (Render): https://truthlens-api-str5.onrender.com/
 
 📖 How to Use
 
