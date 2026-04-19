@@ -1,6 +1,24 @@
 // --- CONFIGURATION ---
-//const API_URL = 'http://localhost:5000/api/analyze'; // Change to your local server URL for testing
 const API_URL = 'https://truthlens-api-str5.onrender.com/api/analyze'; 
+
+// --- THEME SWITCHER LOGIC ---
+const themeSelector = document.getElementById('themeSelector');
+
+// 1. Load saved theme when popup opens (default to Gold)
+chrome.storage.local.get(['truthlens_theme'], (result) => {
+    const savedTheme = result.truthlens_theme || 'theme-gold';
+    document.body.className = savedTheme;
+    if(themeSelector) themeSelector.value = savedTheme;
+});
+
+// 2. Listen for theme changes from the dropdown
+if (themeSelector) {
+    themeSelector.addEventListener('change', (e) => {
+        const newTheme = e.target.value;
+        document.body.className = newTheme;
+        chrome.storage.local.set({ truthlens_theme: newTheme });
+    });
+}
 
 // --- PRIVACY SHIELD LOGIC ---
 const shieldToggle = document.getElementById('shieldToggle');
@@ -113,7 +131,7 @@ document.getElementById('analyzeBtn').addEventListener('click', async () => {
             }
 
             // --- FEATURE 3: Domain Reputation Scoring ---
-            if (url && !url.includes('youtube.com')) {
+            if (url && !url.startsWith('chrome://')) {
                 try {
                     const urlObj = new URL(url);
                     const domain = urlObj.hostname.replace('www.', '');
