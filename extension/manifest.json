@@ -29,7 +29,7 @@
   ],
   "host_permissions": [
     "http://127.0.0.1:5000/*",
-    "https://truthlens-api-xnvw.onrender.com/*",
+    "https://truthlens-api-str5.onrender.com/*",
     "<all_urls>"
   ],
   "declarative_net_request": {
