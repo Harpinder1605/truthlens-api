@@ -4,11 +4,15 @@ from sklearn.metrics.pairwise import cosine_similarity
 import joblib
 import math
 
-# NEW: Import the transcript API
+# Import the transcript API and other utilities
 from youtube_transcript_api import YouTubeTranscriptApi
 import requests
 import csv
 import os
+from dotenv import load_dotenv
+
+# Load variables from .env file into the environment
+load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
@@ -29,39 +33,31 @@ def analyze():
     headline = data['headline']
     body = data['body']
     has_media = data.get('hasMedia', False)
-    video_id = data.get('videoId') # NEW: Grab the video ID if it was sent
+    video_id = data.get('videoId') # Grab the video ID if it was sent
     
-    # --- NEW: Transcript Fetching Logic ---
+    # --- Transcript Fetching Logic ---
     transcript_found = False
     if video_id:
         try:
-            # NEW API SYNTAX: Initialize the class, then use .fetch()
             api = YouTubeTranscriptApi()
             raw_result = api.fetch(video_id)
             
             transcript_segments = []
-            
-            # Extract the raw list of dictionaries safely
             if hasattr(raw_result, 'to_raw_data'):
                 raw_result = raw_result.to_raw_data()
                 
-            # Loop through the data to extract just the spoken text
             for segment in raw_result:
                 if isinstance(segment, dict) and 'text' in segment:
                     transcript_segments.append(segment['text'])
                 elif hasattr(segment, 'text'):
                     transcript_segments.append(segment.text)
                     
-            # Combine all the spoken text segments into one big paragraph
             transcript_text = " ".join(transcript_segments)
             
-            # Only use it if there's substantial text (avoids brief 3-word music videos)
             if len(transcript_text.split()) > 20:
                 body = transcript_text
                 transcript_found = True
         except Exception as e:
-            # If captions are disabled or it fails, we gracefully print the error
-            # and fall back to whatever DOM text was scraped.
             print(f"Could not fetch transcript for video {video_id}: {e}")
 
     word_count = len(body.split())
@@ -74,7 +70,6 @@ def analyze():
                 "svm_flag": False,
                 "similarity_score": 0,
                 "final_warning": False,
-                # Dynamic message based on whether we tried and failed to get a transcript
                 "message": "Media Content: No subtitles available to verify." if video_id else "Media Content: Not enough text to verify.",
                 "risk_percentage": 0,
                 "word_count": word_count,
@@ -105,26 +100,35 @@ def analyze():
     read_time = max(1, round(word_count / 250))
 
     # --- FEATURE 4: Google Fact-Check API Integration ---
-    # Search Google Fact Check Tools API for the headline
     debunked_link = None
     fact_check_title = None
     try:
-        # Note: In a production environment, you would append &key=YOUR_GOOGLE_API_KEY to this URL
-        fact_check_url = f"https://factchecktools.googleapis.com/v1alpha1/claims:search?query={headline}"
-        fc_response = requests.get(fact_check_url, timeout=3)
-        if fc_response.status_code == 200:
-            fc_data = fc_response.json()
-            if 'claims' in fc_data and len(fc_data['claims']) > 0:
-                claim = fc_data['claims'][0]
-                if 'claimReview' in claim and len(claim['claimReview']) > 0:
-                    review = claim['claimReview'][0]
-                    textual_rating = review.get('textualRating', '').lower()
-                    # Check if it's rated as false, misleading, or altered
-                    if any(bad_rating in textual_rating for bad_rating in ['false', 'misleading', 'altered', 'fake']):
-                        debunked_link = review.get('url')
-                        fact_check_title = claim.get('text', 'Debunked Claim')
+        api_key = os.environ.get("GOOGLE_FACT_CHECK_API_KEY")
+        
+        if api_key:
+            fact_check_url = "https://factchecktools.googleapis.com/v1alpha1/claims:search"
+            fc_response = requests.get(fact_check_url, params={"query": headline, "key": api_key}, timeout=5)
+            
+            if fc_response.status_code == 200:
+                fc_data = fc_response.json()
+                if 'claims' in fc_data:
+                    # FIX: Loop through ALL claims instead of just the first one!
+                    for claim in fc_data['claims']:
+                        if 'claimReview' in claim and len(claim['claimReview']) > 0:
+                            review = claim['claimReview'][0]
+                            textual_rating = review.get('textualRating', '').lower()
+                            
+                            # FIX: Expanded list of fact-checker trigger words
+                            bad_ratings = ['false', 'misleading', 'altered', 'fake', 'satire', 'pants on fire', 'unproven', 'unsupported', 'incorrect', 'fiction']
+                            
+                            if any(bad_rating in textual_rating for bad_rating in bad_ratings):
+                                debunked_link = review.get('url')
+                                fact_check_title = claim.get('text', 'Debunked Claim')
+                                break # Found a debunk match, stop looping!
+        else:
+            print("Skipping Fact Check: No API Key found in environment variables.")
     except Exception as e:
-        print("Fact check API failed or requires API key:", e)
+        print("Fact check API failed:", e)
 
     # --- FEATURE 3: Explainable AI (Trigger Words) ---
     headline_words = [ "".join(c for c in word if c.isalnum()) for word in headline.lower().split() ]
@@ -144,8 +148,6 @@ def analyze():
     # --- Smarter Verdict Logic ---
     is_media_flag = False
 
-    # NEW LOGIC: Handling YouTube and Media Noise
-    # Note: If transcript_found is True, we have good text, so we skip the media penalty
     if not transcript_found and has_media and (word_count < 80 or sim_score < 0.15):
         is_media_flag = True
         final_warning = False
@@ -177,13 +179,13 @@ def analyze():
         "read_time": read_time,
         "trigger_words": trigger_words,
         "is_media": is_media_flag,
-        "debunked_link": debunked_link,      # NEW
-        "fact_check_title": fact_check_title # NEW
+        "debunked_link": debunked_link,
+        "fact_check_title": fact_check_title
     }
 
     return jsonify(response)
 
-# --- FEATURE 2: Crowdsourced Feedback API ---
+# --- Crowdsourced Feedback API ---
 @app.route('/api/feedback', methods=['POST'])
 def feedback():
     data = request.json
@@ -194,7 +196,6 @@ def feedback():
     is_clickbait = data.get('is_clickbait', False)
     user_agrees = data.get('user_agrees', True)
     
-    # Save to a local CSV for future model retraining
     file_exists = os.path.isfile('feedback.csv')
     try:
         with open('feedback.csv', mode='a', newline='', encoding='utf-8') as f:

@@ -15,3 +15,7 @@ pycache/
 # Ignore Jupyter Notebook checkpoints
 
 .DS_Store
+
+# Ignore environment variable files
+
+.env
