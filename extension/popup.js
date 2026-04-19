@@ -1,6 +1,6 @@
 // --- CONFIGURATION ---
 const LOCAL_SERVER = 'http://127.0.0.1:5000';
-const CLOUD_SERVER = 'https://truthlens-api-xnvw.onrender.com';
+const CLOUD_SERVER = 'https://truthlens-api-str5.onrender.com';
 let activeServer = LOCAL_SERVER; // Will dynamically switch based on availability
 
 // --- CUSTOM THEME SWITCHER LOGIC ---
