@@ -19,3 +19,7 @@ pycache/
 # Ignore environment variable files
 
 .env
+
+#ingnore security and redundancy audit report
+
+SECURITY_AND_REDUNDANCY_AUDIT.md

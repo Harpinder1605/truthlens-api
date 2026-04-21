@@ -53,20 +53,65 @@ document.addEventListener('click', () => {
 const shieldToggle = document.getElementById('shieldToggle');
 const trackerStats = document.getElementById('trackerStats');
 const blockCount = document.getElementById('blockCount');
+const blockList = document.getElementById('blockList');
 
-// Load saved shield state
-chrome.storage.local.get(['shieldEnabled', 'blockedCount'], (res) => {
-    shieldToggle.checked = res.shieldEnabled !== false; // Default to true
-    if(res.blockedCount && blockCount) blockCount.innerText = res.blockedCount;
-    if(trackerStats) trackerStats.style.display = shieldToggle.checked ? 'block' : 'none';
+// Load saved shield state and sync the declarativeNetRequest rules
+chrome.storage.local.get(['shieldEnabled'], (res) => {
+    const isEnabled = res.shieldEnabled !== false; // Default to true
+    shieldToggle.checked = isEnabled;
+    if(trackerStats) trackerStats.style.display = isEnabled ? 'block' : 'none';
+    
+    // Ensure the browser's adblock engine matches the UI state
+    if (isEnabled) {
+        chrome.declarativeNetRequest.updateEnabledRulesets({ enableRulesetIds: ["privacy_shield"] });
+    } else {
+        chrome.declarativeNetRequest.updateEnabledRulesets({ disableRulesetIds: ["privacy_shield"] });
+    }
 });
 
 shieldToggle.addEventListener('change', (e) => {
     const isEnabled = e.target.checked;
     chrome.storage.local.set({ shieldEnabled: isEnabled });
     if(trackerStats) trackerStats.style.display = isEnabled ? 'block' : 'none';
+    
+    // Toggle the actual blocking rules using the ID from your manifest.json
+    if (isEnabled) {
+        chrome.declarativeNetRequest.updateEnabledRulesets({ enableRulesetIds: ["privacy_shield"] });
+    } else {
+        chrome.declarativeNetRequest.updateEnabledRulesets({ disableRulesetIds: ["privacy_shield"] });
+    }
 });
 
+// --- NEW: Fetch Real-Time Stats from your background.js ---
+chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    if (tabs[0]) {
+        const currentTabId = tabs[0].id;
+        
+        const updateStats = () => {
+            // Ask your background.js for the stats of THIS specific tab
+            chrome.runtime.sendMessage({ action: "getBlockedStats", tabId: currentTabId }, (response) => {
+                if (response && blockCount) {
+                    blockCount.innerText = response.count;
+                    
+                    // --- RESTORED: Update the list of blocked domain names ---
+                    if (blockList) {
+                        if (response.domains && response.domains.length > 0) {
+                            blockList.innerText = response.domains.join(', ');
+                        } else {
+                            blockList.innerText = ''; // Clear if no domains
+                        }
+                    }
+                }
+            });
+        };
+
+        // Fetch immediately when popup opens
+        updateStats();
+        
+        // Poll every 1 second to show real-time counter going up
+        setInterval(updateStats, 1000);
+    }
+});
 
 // --- MAIN AI ANALYSIS LOGIC ---
 const analyzeBtn = document.getElementById('analyzeBtn');
