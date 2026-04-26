@@ -11,16 +11,16 @@ const themeOptions = document.querySelectorAll('.theme-option');
 
 const themeIcons = {
     'theme-gold': '🪙',
-    'theme-silver': '💿',
     'theme-glass': '🧊',
-    'theme-cyber': '💻'
+    'theme-cyber': '💻',
+    'theme-jelly': '🫧'
 };
 
 // 1. Load saved theme when popup opens
 chrome.storage.local.get(['truthlens_theme'], (result) => {
     const savedTheme = result.truthlens_theme || 'theme-gold';
     document.body.className = savedTheme;
-    if(activeThemeIcon) activeThemeIcon.innerText = themeIcons[savedTheme] || '🪙';
+    if (activeThemeIcon) activeThemeIcon.innerText = themeIcons[savedTheme] || '🪙';
 });
 
 // 2. Toggle custom dropdown
@@ -55,31 +55,26 @@ const trackerStats = document.getElementById('trackerStats');
 const blockCount = document.getElementById('blockCount');
 const blockList = document.getElementById('blockList');
 
-// Load saved shield state and sync the declarativeNetRequest rules
-chrome.storage.local.get(['shieldEnabled'], (res) => {
-    const isEnabled = res.shieldEnabled !== false; // Default to true
-    shieldToggle.checked = isEnabled;
+function applyShieldState(isEnabled) {
     if(trackerStats) trackerStats.style.display = isEnabled ? 'block' : 'none';
-    
-    // Ensure the browser's adblock engine matches the UI state
     if (isEnabled) {
         chrome.declarativeNetRequest.updateEnabledRulesets({ enableRulesetIds: ["privacy_shield"] });
     } else {
         chrome.declarativeNetRequest.updateEnabledRulesets({ disableRulesetIds: ["privacy_shield"] });
     }
+}
+
+// Load saved shield state and sync the declarativeNetRequest rules
+chrome.storage.local.get(['shieldEnabled'], (res) => {
+    const isEnabled = res.shieldEnabled !== false; // Default to true
+    shieldToggle.checked = isEnabled;
+    applyShieldState(isEnabled);
 });
 
 shieldToggle.addEventListener('change', (e) => {
     const isEnabled = e.target.checked;
     chrome.storage.local.set({ shieldEnabled: isEnabled });
-    if(trackerStats) trackerStats.style.display = isEnabled ? 'block' : 'none';
-    
-    // Toggle the actual blocking rules using the ID from your manifest.json
-    if (isEnabled) {
-        chrome.declarativeNetRequest.updateEnabledRulesets({ enableRulesetIds: ["privacy_shield"] });
-    } else {
-        chrome.declarativeNetRequest.updateEnabledRulesets({ disableRulesetIds: ["privacy_shield"] });
-    }
+    applyShieldState(isEnabled);
 });
 
 // --- NEW: Fetch Real-Time Stats from your background.js ---
@@ -122,7 +117,7 @@ analyzeBtn.addEventListener('click', async () => {
     analyzeBtn.disabled = true;
     loading.style.display = 'block';
     resultBox.style.display = 'none';
-    
+
     try {
         // Query the active browser tab
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -135,25 +130,23 @@ analyzeBtn.addEventListener('click', async () => {
 
         const pageData = injectionResults[0].result;
 
+        const fetchOptions = {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(pageData)
+        };
+
         let response;
         try {
             // 1. Attempt to connect to the Local Server first
             activeServer = LOCAL_SERVER;
-            response = await fetch(`${activeServer}/api/analyze`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(pageData)
-            });
+            response = await fetch(`${activeServer}/api/analyze`, fetchOptions);
         } catch (err) {
             console.warn("Local server unreachable. Automatically switching to Cloud server...");
             
             // 2. Fallback to the live Render Cloud Server
             activeServer = CLOUD_SERVER;
-            response = await fetch(`${activeServer}/api/analyze`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(pageData)
-            });
+            response = await fetch(`${activeServer}/api/analyze`, fetchOptions);
         }
 
         if (!response.ok) {
@@ -169,15 +162,25 @@ analyzeBtn.addEventListener('click', async () => {
         document.getElementById('simScore').innerText = aiResult.similarity_score;
         document.getElementById('readTime').innerText = aiResult.read_time + " MIN (" + aiResult.word_count + " WORDS)";
 
-        // --- 2. Restore Domain Trust Logic ---
-        const url = new URL(tab.url);
-        const domain = url.hostname.replace('www.', '');
-        let domainTrustScore = 85; // Default fallback score
+        const emotionEl = document.getElementById('emotionScore');
+        if (emotionEl) emotionEl.innerText = (aiResult.emotion_score || 0) + "%";
+
+        const emotionAlert = document.getElementById('emotionAlert');
+        if (emotionAlert) {
+            if (aiResult.emotion_score > 70) {
+                emotionAlert.style.display = 'block';
+            } else {
+                emotionAlert.style.display = 'none';
+            }
+        }
+
+        // --- 2. Global Domain Trust Logic ---
+        let domainTrustScore = aiResult.domain_trust ?? 85;
         
-        // Assign trust based on domain or AI verdict
-        if (domain.includes('youtube.com') || domain.includes('google.com')) domainTrustScore = 98;
-        else if (aiResult.final_warning || aiResult.risk_percentage > 70) domainTrustScore = Math.floor(Math.random() * 15) + 10; // Low score for deceptive sites
-        else domainTrustScore = Math.floor(Math.random() * 25) + 70; // 70-95% for standard sites
+        // Ensure standard platforms remain highly trusted
+        if (pageData.domain.includes('youtube.com') || pageData.domain.includes('google.com')) {
+            domainTrustScore = 98;
+        }
         
         const domainTrustRow = document.getElementById('domainTrustRow');
         const domainTrustEl = document.getElementById('domainTrustScore');
@@ -195,6 +198,16 @@ analyzeBtn.addEventListener('click', async () => {
             factCheckAlert.style.display = 'none';
         }
 
+        // --- 5.5 AI Explanation (XAI) ---
+        const aiExplanationContainer = document.getElementById('aiExplanationContainer');
+        const aiExplanationText = document.getElementById('aiExplanationText');
+        if (aiResult.ai_explanation) {
+            aiExplanationContainer.style.display = 'block';
+            aiExplanationText.innerText = aiResult.ai_explanation;
+        } else if (aiExplanationContainer) {
+            aiExplanationContainer.style.display = 'none';
+        }
+
         // --- 4. Trigger Words Extraction ---
         const triggerContainer = document.getElementById('triggerContainer');
         const triggerWordsDiv = document.getElementById('triggerWords');
@@ -207,6 +220,13 @@ analyzeBtn.addEventListener('click', async () => {
                 span.className = 'trigger-tag';
                 span.innerText = word;
                 triggerWordsDiv.appendChild(span);
+            });
+            
+            // Inject highlighting script into the active tab
+            chrome.scripting.executeScript({
+                target: { tabId: tab.id },
+                func: highlightTriggerWordsOnPage,
+                args: [aiResult.trigger_words]
             });
         } else {
             triggerContainer.style.display = 'none';
@@ -251,7 +271,8 @@ analyzeBtn.addEventListener('click', async () => {
                         body: JSON.stringify({
                             headline: aiResult.headline,
                             is_clickbait: aiResult.svm_flag,
-                            user_agrees: userAgrees
+                            user_agrees: userAgrees,
+                            domain: pageData.domain
                         })
                     });
                 } catch(err) {
@@ -281,23 +302,101 @@ analyzeBtn.addEventListener('click', async () => {
 // --- DOM SCRAPING FUNCTION (Executes inside the active tab) ---
 function scrapePageData() {
     let headline = document.querySelector('h1') ? document.querySelector('h1').innerText : document.title;
-    let paragraphs = Array.from(document.querySelectorAll('p')).map(p => p.innerText);
+    
+    // Target the most likely article containers first to avoid headers/footers/sidebars
+    let container = document.querySelector('article') || 
+                    document.querySelector('main') || 
+                    document.querySelector('.post-content, .article-content, .entry-content') ||
+                    document.body;
+
+    // Get paragraphs only from the main container and filter out short, non-content strings (like "Log In" or "Subscribe")
+    let paragraphs = Array.from(container.querySelectorAll('p'))
+        .map(p => p.innerText.trim())
+        .filter(text => text.length > 50); // Real article paragraphs usually exceed 50 characters
+        
     let bodyText = paragraphs.join(' ');
     
     // Check if the page relies heavily on media
     let hasMedia = document.querySelectorAll('img, video').length > 2;
     let videoId = null;
+    let author = null;
 
     // Special logic to grab YouTube video IDs for backend transcript fetching
     if (window.location.hostname.includes('youtube.com')) {
         const urlParams = new URLSearchParams(window.location.search);
         videoId = urlParams.get('v');
+        
+        // Try to extract the YouTube channel name
+        const channelEl = document.querySelector('.ytd-channel-name a, #upload-info a');
+        if (channelEl) author = channelEl.innerText.trim();
+    } else {
+        // Try to extract article author from standard meta tags
+        const authorMeta = document.querySelector('meta[name="author"], meta[property="article:author"]');
+        if (authorMeta) author = authorMeta.content;
     }
 
     return {
         headline: headline,
         body: bodyText,
         hasMedia: hasMedia,
-        videoId: videoId
+        videoId: videoId,
+        author: author,
+        domain: window.location.hostname.replace('www.', '')
     };
+}
+
+// --- DOM HIGHLIGHTING FUNCTION (Executes inside the active tab) ---
+function highlightTriggerWordsOnPage(words) {
+    if (!words || words.length === 0) return;
+    
+    // Remove existing highlights if any exist from previous scans
+    document.querySelectorAll('mark.truthlens-highlight').forEach(mark => {
+        const parent = mark.parentNode;
+        parent.replaceChild(document.createTextNode(mark.textContent), mark);
+        parent.normalize();
+    });
+
+    // Escape words and create regex (case-insensitive, whole word boundaries)
+    const escapedWords = words.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    const regex = new RegExp(`\\b(${escapedWords.join('|')})\\b`, 'gi');
+
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
+    const nodesToReplace = [];
+
+    let node;
+    while ((node = walker.nextNode())) {
+        const parentName = node.parentNode.nodeName;
+        // Skip script, style, and already highlighted tags
+        if (parentName !== 'SCRIPT' && parentName !== 'STYLE' && parentName !== 'NOSCRIPT' && parentName !== 'MARK') {
+            if (regex.test(node.nodeValue)) {
+                nodesToReplace.push(node);
+            }
+        }
+    }
+
+    // Safely replace text nodes with <mark> wrappers to preserve HTML structure
+    nodesToReplace.forEach(node => {
+        const fragment = document.createDocumentFragment();
+        let lastIndex = 0;
+        let text = node.nodeValue;
+        regex.lastIndex = 0;
+        let match;
+        
+        while ((match = regex.exec(text)) !== null) {
+            if (match.index > lastIndex) {
+                fragment.appendChild(document.createTextNode(text.substring(lastIndex, match.index)));
+            }
+            const mark = document.createElement('mark');
+            mark.className = 'truthlens-highlight';
+            // Grammarly-style subtle highlight (Red underline with slight background)
+            mark.style.cssText = 'background-color: rgba(255, 0, 85, 0.2); border-bottom: 2px solid #ff0055; color: inherit; font-weight: bold; position: relative;';
+            mark.textContent = match[0];
+            fragment.appendChild(mark);
+            lastIndex = regex.lastIndex;
+        }
+        if (lastIndex < text.length) {
+            fragment.appendChild(document.createTextNode(text.substring(lastIndex)));
+        }
+        node.parentNode.replaceChild(fragment, node);
+    });
 }

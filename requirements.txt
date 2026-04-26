@@ -7,3 +7,6 @@ gunicorn>=21.2.0
 youtube-transcript-api
 requests
 python-dotenv
+textblob
+groq
+pymongo

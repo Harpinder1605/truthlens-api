@@ -14,6 +14,22 @@ from dotenv import load_dotenv
 # Load variables from .env file into the environment
 load_dotenv()
 
+import threading
+import subprocess
+from textblob import TextBlob
+from groq import Groq
+from pymongo import MongoClient
+
+# --- FEATURE 2 & 5 Setup: Cloud DB and Groq API ---
+MONGO_URI = os.environ.get("MONGO_URI")
+db = None
+if MONGO_URI:
+    mongo_client = MongoClient(MONGO_URI)
+    db = mongo_client['truthlens']
+
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
+groq_client = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
+
 app = Flask(__name__)
 CORS(app)
 
@@ -34,6 +50,8 @@ def analyze():
     body = data['body']
     has_media = data.get('hasMedia', False)
     video_id = data.get('videoId') # Grab the video ID if it was sent
+    author = data.get('author', '') # Grab the extracted author/channel
+    domain = data.get('domain', '')
     
     # --- Transcript Fetching Logic ---
     transcript_found = False
@@ -93,11 +111,22 @@ def analyze():
     distance = svm_model.decision_function(headline_vector)[0]
     svm_prob = 1 / (1 + math.exp(-distance))
     
-    risk_percentage = int(((svm_prob * 0.6) + ((1 - sim_score) * 0.4)) * 100)
+    if transcript_found:
+        # Spoken language rarely matches video titles exactly. 
+        # Ignore the cosine similarity penalty entirely for videos and trust the SVM.
+        risk_percentage = int(svm_prob * 100)
+    else:
+        risk_percentage = int(((svm_prob * 0.6) + ((1 - sim_score) * 0.4)) * 100)
+        
     risk_percentage = max(0, min(100, risk_percentage))
 
     # --- FEATURE 2: Read Time & Content Depth ---
     read_time = max(1, round(word_count / 250))
+
+    # --- FEATURE 3: Emotion & Sensationalism Profiling (NLP) ---
+    analysis_text = f"{headline} {body[:500]}"
+    blob = TextBlob(analysis_text)
+    emotion_score = int((abs(blob.sentiment.polarity) * 0.4 + blob.sentiment.subjectivity * 0.6) * 100)
 
     # --- FEATURE 4: Google Fact-Check API Integration ---
     debunked_link = None
@@ -147,14 +176,24 @@ def analyze():
 
     # --- Smarter Verdict Logic ---
     is_media_flag = False
-
+     
     if not transcript_found and has_media and (word_count < 80 or sim_score < 0.15):
         is_media_flag = True
         final_warning = False
         verdict_msg = "Media Content: Context is inside the video."
         risk_percentage = 0
         sim_score = 0
-        
+    elif transcript_found:
+        # Custom logic for YouTube/Videos: Ignore similarity score, rely purely on SVM probability
+        if is_clickbait_svm and svm_prob > 0.80:
+            final_warning = True
+            verdict_msg = "High Risk: Clickbait Video Title!"
+        elif is_clickbait_svm:
+            final_warning = False
+            verdict_msg = "Sensational Video Title."
+        else:
+            final_warning = False
+            verdict_msg = "Seems Reliable."
     elif is_clickbait_svm and sim_score >= 0.25:
         final_warning = False
         verdict_msg = "Sensational, but verifiable."
@@ -168,6 +207,29 @@ def analyze():
         final_warning = False
         verdict_msg = "Seems Reliable."
 
+    # --- FEATURE 2: Global Domain Trust ---
+    domain_trust = 85
+    if db is not None and domain:
+        domain_record = db.domains.find_one({"domain": domain})
+        if domain_record:
+            total_flags = domain_record.get("flags", 0)
+            total_scans = domain_record.get("total_scans", 1)
+            penalty = (total_flags / total_scans) * 100
+            domain_trust = max(10, int(100 - penalty))
+
+    # --- FEATURE 5: Explainable AI (XAI) using Groq ---
+    ai_explanation = None
+    if final_warning and groq_client:
+        try:
+            prompt = f"In one short sentence, explain why this headline might be misleading or clickbait based on the text. Headline: '{headline}'. Text: '{body[:400]}'"
+            chat_completion = groq_client.chat.completions.create(
+                messages=[{"role": "user", "content": prompt}],
+                model="llama-3.1-8b-instant",
+            )
+            ai_explanation = chat_completion.choices[0].message.content.strip()
+        except Exception as e:
+            print("Groq XAI Error:", e)
+
     response = {
         "headline": headline,
         "svm_flag": is_clickbait_svm,
@@ -180,7 +242,10 @@ def analyze():
         "trigger_words": trigger_words,
         "is_media": is_media_flag,
         "debunked_link": debunked_link,
-        "fact_check_title": fact_check_title
+        "fact_check_title": fact_check_title,
+        "emotion_score": emotion_score,
+        "ai_explanation": ai_explanation,
+        "domain_trust": domain_trust
     }
 
     return jsonify(response)
@@ -195,17 +260,51 @@ def feedback():
     headline = data.get('headline', '')
     is_clickbait = data.get('is_clickbait', False)
     user_agrees = data.get('user_agrees', True)
+    domain = data.get('domain', '')
+    
+    # Update Cloud Database Trust Scores ---
+    if db is not None and domain:
+        try:
+            is_clickbait_actual = is_clickbait if user_agrees else not is_clickbait
+            flags_to_add = 1 if is_clickbait_actual else 0
+            db.domains.update_one(
+                {"domain": domain},
+                {"$inc": {"flags": flags_to_add, "total_scans": 1}},
+                upsert=True
+            )
+        except Exception as e:
+            print("MongoDB update error:", e)
     
     file_exists = os.path.isfile('feedback.csv')
     try:
+        row_count = 0
         with open('feedback.csv', mode='a', newline='', encoding='utf-8') as f:
             writer = csv.writer(f)
             if not file_exists:
                 writer.writerow(['Headline', 'Model_Predicted_Clickbait', 'User_Agrees'])
             writer.writerow([headline, is_clickbait, user_agrees])
+            
+        # --- FEATURE 1: Automated Retraining Pipeline (MLOps) ---
+        with open('feedback.csv', mode='r', encoding='utf-8') as f:
+            row_count = sum(1 for row in f) - 1 # Exclude header
+            
+        if row_count > 0 and row_count % 10 == 0:
+            print(f"Collected {row_count} feedback entries. Triggering Automated MLOps Retraining...")
+            def retrain_model():
+                global svm_model, svm_vectorizer
+                try:
+                    subprocess.run(['python', 'train_model.py'], check=True)
+                    svm_model = joblib.load('clickbait_model.pkl')
+                    svm_vectorizer = joblib.load('vectorizer.pkl')
+                    print("MLOps Pipeline: Model retrained and successfully hot-reloaded!")
+                except Exception as e:
+                    print("MLOps Retraining Error:", e)
+                    
+            threading.Thread(target=retrain_model).start()
+
         return jsonify({"message": "Feedback saved!"})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(debug=True, use_reloader=False, port=5000)

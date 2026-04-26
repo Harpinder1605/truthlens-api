@@ -4,20 +4,35 @@ from sklearn.svm import LinearSVC
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, classification_report
 import joblib
+import os
 
 print("Step 1: Loading Dataset from CSV...")
 try:
-    # Make sure your CSV file is named exactly this, and is in the same folder
+    
     df = pd.read_csv('clickbait_data.csv')
     
-    # NOTE: You may need to change 'headline' and 'label' below to match 
-    # the exact column names in your specific Kaggle CSV file!
     text_column = 'headline' 
     label_column = 'clickbait'    # sometimes this is called 'clickbait' or 'class'
 
     # Drop any empty rows just in case
     df = df.dropna(subset=[text_column, label_column])
     
+    # FEATURE 1: Merge new crowdsourced data before training
+    if os.path.exists('feedback.csv'):
+        print("Merging crowdsourced feedback data for Continuous Learning...")
+        feedback_df = pd.read_csv('feedback.csv')
+        if not feedback_df.empty and 'Headline' in feedback_df.columns:
+            # Calculate the true label based on user agreement
+            def get_true_label(row):
+                pred = str(row.get('Model_Predicted_Clickbait', '')).lower() == 'true'
+                agrees = str(row.get('User_Agrees', '')).lower() == 'true'
+                return 1 if pred == agrees else 0
+            
+            feedback_df[label_column] = feedback_df.apply(get_true_label, axis=1)
+            feedback_df = feedback_df.rename(columns={'Headline': text_column})
+            df = pd.concat([df, feedback_df[[text_column, label_column]]], ignore_index=True)
+            print(f"Added {len(feedback_df)} new community-verified examples!")
+
     print(f"Successfully loaded {len(df)} headlines!")
 
 except FileNotFoundError:

@@ -26,25 +26,6 @@
     }
 
     /* =========================================
-       THEME 2: BRIGHT SILVER
-       ========================================= */
-    body.theme-silver {
-      --bg-color: #0d0e12; --card-bg: #16181d;
-      --text-main: #f8fafc; --text-sub: #94a3b8; --border: #2a2e37;
-      --primary: #cbd5e1;
-      --accent-gradient: linear-gradient(135deg, #94a3b8 0%, #ffffff 25%, #64748b 50%, #f8fafc 75%, #475569 100%);
-      --accent-pan: linear-gradient(to right, #94a3b8, #ffffff, #64748b, #f8fafc, #475569, #94a3b8, #ffffff);
-      --btn-text: #0f172a; --border-radius: 8px; --card-radius: 12px;
-      --danger-dark: #f87171; --danger-light: rgba(239, 68, 68, 0.15);
-      --safe-dark: #4ade80; --safe-light: rgba(34, 197, 94, 0.15);
-      --neutral-dark: #cbd5e1; --neutral-light: rgba(148, 163, 184, 0.15);
-      --font-family: 'Inter', sans-serif;
-      --result-bg: var(--accent-gradient); --result-text: #0f172a; --result-sub: #334155;
-      --result-box-bg: rgba(255, 255, 255, 0.5); --result-border: #ffffff;
-      --btn-shadow: 0 4px 15px rgba(148, 163, 184, 0.25);
-    }
-
-    /* =========================================
        THEME 3: CYBERPUNK NEON
        ========================================= */
     body.theme-cyber {
@@ -84,6 +65,43 @@
     }
     body.theme-glass::before { top: -20%; left: -20%; width: 250px; height: 250px; background: #c7d2fe; opacity: 0.6; }
     body.theme-glass::after { bottom: -10%; right: -10%; width: 200px; height: 200px; background: #fbcfe8; opacity: 0.6; }
+
+    /* =========================================
+       THEME 5: PREMIUM JELLY
+       ========================================= */
+    body.theme-jelly {
+      --bg-color: #f5f3ff; --card-bg: rgba(255, 255, 255, 0.45);
+      --text-main: #4c1d95; --text-sub: #7c3aed; --border: rgba(255, 255, 255, 0.7);
+      --primary: #8b5cf6;
+      --accent-gradient: linear-gradient(135deg, rgba(167, 139, 250, 0.9) 0%, rgba(196, 181, 253, 0.9) 100%);
+      --accent-pan: linear-gradient(to right, rgba(167, 139, 250, 0.9), rgba(196, 181, 253, 0.9), rgba(167, 139, 250, 0.9));
+      --btn-text: #ffffff; --border-radius: 20px; --card-radius: 24px;
+      --danger-dark: #e11d48; --danger-light: rgba(225, 29, 72, 0.2);
+      --safe-dark: #059669; --safe-light: rgba(5, 150, 105, 0.2);
+      --neutral-dark: #64748b; --neutral-light: rgba(100, 116, 139, 0.2);
+      --font-family: 'Inter', sans-serif;
+      --result-bg: rgba(255, 255, 255, 0.55); --result-text: #4c1d95; --result-sub: #7c3aed;
+      --result-box-bg: rgba(255, 255, 255, 0.7); --result-border: rgba(255, 255, 255, 0.9);
+      --btn-shadow: 0 8px 24px rgba(139, 92, 246, 0.35);
+    }
+    body.theme-jelly::before { top: 0%; left: -20%; width: 250px; height: 250px; background: #c084fc; opacity: 0.4; filter: blur(50px); }
+    body.theme-jelly::after { bottom: -10%; right: -20%; width: 250px; height: 250px; background: #38bdf8; opacity: 0.4; filter: blur(50px); }
+
+    body.theme-jelly .panel, body.theme-jelly .theme-options {
+      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+      box-shadow: inset 0 0 12px rgba(255, 255, 255, 0.7), 0 8px 32px rgba(139, 92, 246, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.9);
+      border-radius: var(--card-radius);
+    }
+    body.theme-jelly .theme-btn { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-radius: 12px; }
+    body.theme-jelly button.btn-main { border: 2px solid rgba(255, 255, 255, 0.9); box-shadow: inset 0 0 12px rgba(255, 255, 255, 0.5), var(--btn-shadow); }
+    body.theme-jelly .theme-option, body.theme-jelly button, body.theme-jelly .panel, body.theme-jelly .slider { transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+    @keyframes jelly-squish { 0% { transform: scale(1, 1); } 30% { transform: scale(1.08, 0.92); } 60% { transform: scale(0.92, 1.08); } 100% { transform: scale(1, 1); } }
+    @keyframes jelly-wobble { 0%, 100% { transform: translateX(0) rotate(0); } 25% { transform: translateX(-2px) rotate(-1deg); } 50% { transform: translateX(2px) rotate(1deg); } 75% { transform: translateX(-1px) rotate(-0.5deg); } }
+
+    body.theme-jelly .btn-main:active, body.theme-jelly .theme-btn:active, body.theme-jelly .theme-option:active { animation: jelly-squish 0.5s cubic-bezier(0.25, 0.8, 0.25, 1); }
+    body.theme-jelly .panel:hover { animation: jelly-wobble 0.6s ease-in-out; }
 
     /* =========================================
        UNIVERSAL BASE STYLES
@@ -176,7 +194,7 @@
       box-shadow: var(--btn-shadow); transition: all 0.2s; margin-bottom: 16px; 
       font-family: var(--font-family); position: relative; overflow: hidden;
     }
-    body.theme-gold button.btn-main, body.theme-silver button.btn-main { animation: bgPan 3s linear infinite; border-color: var(--result-border); }
+    body.theme-gold button.btn-main { animation: bgPan 3s linear infinite; border-color: var(--result-border); }
     body.theme-cyber button.btn-main { text-transform: uppercase; letter-spacing: 1px; }
     body.theme-glass button.btn-main { border: none; }
     
@@ -235,12 +253,12 @@
     }
     /* Dynamic Shadows */
     body.theme-gold #resultBox { box-shadow: 0 12px 30px rgba(179, 135, 40, 0.3); }
-    body.theme-silver #resultBox { box-shadow: 0 12px 30px rgba(100, 116, 139, 0.3); }
     body.theme-cyber #resultBox { box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
     body.theme-glass #resultBox { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); box-shadow: var(--glass-shadow); }
+    body.theme-jelly #resultBox { backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: inset 0 0 12px rgba(255, 255, 255, 0.7), 0 12px 32px rgba(139, 92, 246, 0.2); }
 
     /* Shimmer Sweep only for metallic themes */
-    body.theme-gold #resultBox::after, body.theme-silver #resultBox::after {
+    body.theme-gold #resultBox::after {
       content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
       background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0) 100%);
       transform: skewX(-20deg); animation: shimmerSweep 5s infinite; pointer-events: none;
@@ -277,8 +295,8 @@
     .safe-bg { background-color: var(--safe-light); color: var(--safe-dark); border: 1px solid var(--safe-dark); }
     .neutral-bg { background-color: var(--neutral-light); color: var(--result-text); border: 1px solid var(--neutral-dark); }
     
-    body.theme-gold .danger-bg, body.theme-silver .danger-bg { border-color: rgba(239, 68, 68, 0.4); box-shadow: 0 0 15px rgba(239, 68, 68, 0.3); }
-    body.theme-gold .safe-bg, body.theme-silver .safe-bg { border-color: rgba(34, 197, 94, 0.4); box-shadow: 0 0 15px rgba(34, 197, 94, 0.3); }
+    body.theme-gold .danger-bg { border-color: rgba(239, 68, 68, 0.4); box-shadow: 0 0 15px rgba(239, 68, 68, 0.3); }
+    body.theme-gold .safe-bg { border-color: rgba(34, 197, 94, 0.4); box-shadow: 0 0 15px rgba(34, 197, 94, 0.3); }
 
     /* Feedback Box */
     #feedbackContainer { display: none; position: relative; z-index: 2; margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--result-border); text-align: center; }
@@ -290,7 +308,6 @@
     #feedbackNoBtn { color: var(--danger-dark); border-color: var(--danger-dark); }
     #feedbackYesBtn:hover { background: var(--safe-dark); color: #fff; }
     #feedbackNoBtn:hover { background: var(--danger-dark); color: #fff; }
-    
   </style>
 </head>
 <body class="theme-gold">
@@ -310,9 +327,9 @@
       </button>
       <div id="themeMenu" class="theme-options">
         <div class="theme-option" data-theme="theme-gold">🪙 Gold</div>
-        <div class="theme-option" data-theme="theme-silver">💿 Silver</div>
         <div class="theme-option" data-theme="theme-glass">🧊 Glass</div>
         <div class="theme-option" data-theme="theme-cyber">💻 Cyber</div>
+        <div class="theme-option" data-theme="theme-jelly">🫧 Jelly</div>
       </div>
     </div>
   </div>
@@ -357,7 +374,8 @@
     <div class="metric-row"><span class="metric-label">Deception Probability</span><span id="riskScore" class="metric-value">--%</span></div>
     <div class="metric-row"><span class="metric-label">Context Similarity</span><span id="simScore" class="metric-value">--</span></div>
     <div class="metric-row"><span class="metric-label">Estimated Length</span><span id="readTime" class="metric-value">--</span></div>
-    <div class="metric-row" id="domainTrustRow" style="display: none;"><span class="metric-label">Domain Trust</span><span id="domainTrustScore" class="metric-value">--%</span></div>
+    <div class="metric-row"><span class="metric-label">Emotion Profiling</span><span id="emotionScore" class="metric-value">--%</span></div>
+    <div class="metric-row" id="domainTrustRow" style="display: none;"><span class="metric-label">Global Trust</span><span id="domainTrustScore" class="metric-value">--%</span></div>
 
     <div id="factCheckAlert">
       <strong>🚨 FACT CHECK ALERT:</strong>
@@ -365,9 +383,19 @@
       <a id="factCheckLink" href="#" target="_blank">Read the Debunk &rarr;</a>
     </div>
 
+    <div id="emotionAlert" style="display: none; margin-top: 12px; background: var(--danger-light); border: 1px solid var(--danger-dark); padding: 10px; border-radius: 8px;">
+      <strong style="color: var(--danger-dark); font-size: 13px; text-transform: uppercase;">⚠️ High Emotion Detected:</strong>
+      <p style="font-size: 12px; font-weight: 600; margin: 6px 0; color: var(--result-text);">This article uses highly emotionally manipulative language.</p>
+    </div>
+
     <div id="triggerContainer">
       <div class="metric-label">SVM Trigger Words:</div>
       <div id="triggerWords" class="trigger-tags"></div>
+    </div>
+
+    <div id="aiExplanationContainer" style="display: none; margin-top: 12px; background: var(--neutral-light); padding: 10px; border-radius: 8px; border: 1px solid var(--neutral-dark);">
+      <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--result-text); margin-bottom: 4px;">🧠 AI Explanation:</div>
+      <div id="aiExplanationText" style="font-size: 12px; color: var(--result-text); line-height: 1.4;"></div>
     </div>
 
     <div class="verdict-container">
